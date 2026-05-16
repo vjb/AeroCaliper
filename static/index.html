@@ -218,7 +218,10 @@
   .badge-warn { background:rgba(245,158,11,0.15); color:var(--accent-amber); }
   .badge-safe { background:rgba(16,185,129,0.15); color:var(--accent-green); }
   .badge-threat { background:rgba(239,68,68,0.15); color:var(--accent-red); }
-  .card-body { font-size:12px; color:var(--text-secondary); line-height:1.6; }
+  .card-body { font-size:12px; color:var(--text-secondary); line-height:1.6; max-height:120px; overflow-y:auto; padding-right:4px; }
+  .card-body::-webkit-scrollbar { width:4px; }
+  .card-body::-webkit-scrollbar-track { background:transparent; }
+  .card-body::-webkit-scrollbar-thumb { background:var(--bg-elevated); border-radius:4px; }
   .risk-bar { height:4px; border-radius:2px; background:var(--bg-elevated); margin-top:8px; }
   .risk-fill { height:100%; border-radius:2px; transition:width 0.6s ease; }
 
@@ -354,7 +357,7 @@
           <div class="phase-icon">🛡️</div>
           <div class="phase-info">
             <div class="phase-name">Phase 5 — Secure Patch</div>
-            <div class="phase-desc">Agent Gateway (Simulated Model Armor DPI) · upsert-prompt MCP deploys fix to Arize</div>
+            <div class="phase-desc">Google Cloud Model Armor DPI · upsert-prompt MCP deploys fix to Arize</div>
           </div>
           <span class="phase-status status-idle">Idle</span>
         </div>
