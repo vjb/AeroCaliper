@@ -1,14 +1,23 @@
-# AeroCaliper: Mocks & Functional Limitations Log
+# AeroCaliper: Reality vs. Simulation Log
 
-Per project requirements, this document tracks all simulated functionality. 
+Per project requirements, this document transparently tracks exactly what components of the AeroCaliper architecture are utilizing live, production infrastructure versus what has been simulated locally for the purpose of the hackathon demonstration.
 
-## 100% FUNCTIONAL STATUS (Zero Mocks Remaining)
-As of the latest iteration, **AeroCaliper is a 100% cutting-edge, functional AI security agent.**
-All abstractions and mocks have been completely removed to win the Arize Partner Track.
+## ✅ What is REAL (Production-Grade)
 
-1. **Target Agent Core (`target_agent.py`) is Real:**
-   - We no longer simulate the agent's logic with Python `if` statements. The Target Agent now dynamically queries `gemini-flash-latest` via REST API, forcing it to hallucinate the missing budget tag natively to prove the vulnerability exists dynamically in the LLM.
-2. **Arize MCP Integration is Real:**
-   - The AeroCaliper ADK client natively spawns the official `@arizeai/phoenix-mcp` NPM package via `npx` and communicates over the JSON-RPC 2.0 `stdio` protocol. No custom Python mocks are used.
-3. **Gemini 3.1 Pro "Interactions API" & "Thought Signatures" are Real:**
-   - The background polling job no longer uses `asyncio.sleep()`. It now spawns a secondary Gemini AI session acting as an `LLM-as-a-Judge`, executing a rigorous evaluation rubric on the generated Candidate Prompt (the Thought Signature) to guarantee the FinOps fix before authorizing the patch via the MCP server.
+1. **Target Agent AI Logic (`target_agent.py`)**
+   - **Real:** The "Confused Deputy" hallucination is not hardcoded in Python. The agent makes live POST requests to the `generativelanguage.googleapis.com` Gemini REST API, dynamically prompting it to select a cluster and proving that the LLM forgets the budget tag.
+2. **The Arize MCP Client (`aerocaliper.py`)**
+   - **Real:** We do not mock the MCP server. Our Python client uses `subprocess` to download and spawn the **OFFICIAL `@arizeai/phoenix-mcp` NPM package** via `npx`. It communicates securely over `stdio` using the strict JSON-RPC 2.0 protocol.
+3. **The "Interactions API" & "Thought Signatures"**
+   - **Real:** To validate our fix, we spawn a secondary, live Gemini AI session acting as an `LLM-as-a-Judge`. It evaluates the candidate prompt (Thought Signature) against a strict grading rubric before authorizing the patch.
+4. **FinOps Code Evaluator (`evaluators.py`)**
+   - **Real:** The OpenTelemetry trace evaluation logic deterministically parses the JSON payload to enforce standard FinOps governance.
+
+## ⚠️ What is MOCKED (Simulated for Demo Stability)
+
+1. **Model Armor & Agent Gateway (`agent_gateway.py`)**
+   - **Mocked:** We have not deployed actual Google Cloud Model Armor infrastructure. Instead, we built a local Python middleware (`AgentGatewaySimulator`) that parses local YAML files (`infra/model_armor_policy.yaml`) to perform deep packet inspection and block outbound prompt injections, perfectly simulating the GCP service.
+2. **Arize Cloud Trace Fetching (Empty Workspace Fallback)**
+   - **Mocked:** The official MCP server successfully connects, but because the workspace is empty (or network calls are blocked), it returns a `fetch failed` error. To ensure the autonomous orchestration demo doesn't crash, we gracefully inject a hardcoded baseline hallucination trace (`trace-9948`) as a fallback if the real fetch fails.
+3. **Hosting Environment**
+   - **Mocked:** The system is currently running as local Python processes on a Windows development machine. It has not yet been containerized and deployed to Google Cloud Run (which is the goal of Phase 5).
