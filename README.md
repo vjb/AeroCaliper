@@ -99,6 +99,7 @@ While the demo highlights the core remediation pipeline, the true enterprise arc
 
 - **Google Cloud Pub/Sub**: Acts as the asynchronous trigger layer. When Arize Phoenix detects a violation, it fires a webhook to a Pub/Sub topic. This scales the AeroCaliper Cloud Run instances horizontally, decoupling detection from remediation.
 - **Google Cloud Firestore**: Provides stateless session management across container instances. The A2UI Human-in-the-Loop approval gate uses Firestore to persist the `candidate_prompt` and `Thought Signature` while waiting for admin approval, ensuring the pipeline can be paused and resumed without blocking active compute threads.
+- **Cloud Build CI/CD Pipeline**: Deploys securely using a zero-trust, user-managed service account (`cloudbuild-runner@aerocaliper.iam.gserviceaccount.com`), overriding default permissions to strictly enforce least privilege.
 
 ---
 

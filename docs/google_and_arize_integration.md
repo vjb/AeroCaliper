@@ -27,6 +27,11 @@ AeroCaliper is built from the ground up to deeply integrate Google Cloud Platfor
 6. **Gemini CLI Config**
    - We include a native `gemini-cli-config.json` that drops `@arizeai/phoenix-mcp` into the Gemini CLI for manual developer interaction, precisely as the Arize track rubric requires.
 
+7. **Google Cloud Build (CI/CD)**
+   - Continuous deployment is powered by Cloud Build triggers.
+   - For strict security compliance, builds execute using a dedicated, least-privilege user-managed service account (`cloudbuild-runner@aerocaliper.iam.gserviceaccount.com`), overriding the default Google-managed builder.
+   - The runner is granted minimal scoped roles: `roles/artifactregistry.writer`, `roles/run.admin`, `roles/storage.admin`, `roles/logging.logWriter`, and `roles/iam.serviceAccountUser`.
+
 ## Arize Phoenix Integration
 
 1. **Trace Exporting (OTLP)**
