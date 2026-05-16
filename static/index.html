@@ -193,6 +193,45 @@
 
   /* Timer */
   #timer { font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text-muted); }
+
+  /* A2UI Cards */
+  .a2ui-section { margin-bottom:20px; }
+  .a2ui-cards { display:flex; flex-direction:column; gap:12px; padding:16px; }
+  .a2ui-card {
+    border-radius:10px; border:1px solid var(--border); background:var(--bg-card);
+    padding:14px 16px; animation:cardIn 0.3s ease;
+  }
+  @keyframes cardIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+  .a2ui-card.anomaly { border-color:rgba(245,158,11,0.4); background:rgba(245,158,11,0.05); }
+  .a2ui-card.anomaly.safe { border-color:rgba(16,185,129,0.4); background:rgba(16,185,129,0.05); }
+  .a2ui-card.trace { border-color:rgba(239,68,68,0.3); background:rgba(239,68,68,0.04); }
+  .a2ui-card.candidate { border-color:rgba(139,92,246,0.4); background:rgba(139,92,246,0.05); }
+  .card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+  .card-title { font-size:12px; font-weight:600; color:var(--text-primary); }
+  .card-badge { font-size:10px; font-weight:600; padding:2px 8px; border-radius:10px; }
+  .badge-warn { background:rgba(245,158,11,0.15); color:var(--accent-amber); }
+  .badge-safe { background:rgba(16,185,129,0.15); color:var(--accent-green); }
+  .badge-threat { background:rgba(239,68,68,0.15); color:var(--accent-red); }
+  .card-body { font-size:12px; color:var(--text-secondary); line-height:1.6; }
+  .risk-bar { height:4px; border-radius:2px; background:var(--bg-elevated); margin-top:8px; }
+  .risk-fill { height:100%; border-radius:2px; transition:width 0.6s ease; }
+
+  /* Approve/Reject */
+  .approval-panel {
+    background:var(--bg-panel); border:1px solid rgba(139,92,246,0.4);
+    border-radius:16px; padding:20px 24px; margin-bottom:20px;
+    display:none; animation:cardIn 0.4s ease;
+    box-shadow:0 0 30px rgba(139,92,246,0.15);
+  }
+  .approval-panel.visible { display:block; }
+  .approval-title { font-size:14px; font-weight:600; color:var(--accent-violet); margin-bottom:8px; }
+  .approval-desc { font-size:13px; color:var(--text-secondary); margin-bottom:16px; }
+  .approval-prompt { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-secondary); background:var(--bg-card); border:1px solid var(--border); border-radius:8px; padding:12px; margin-bottom:16px; white-space:pre-wrap; max-height:120px; overflow-y:auto; }
+  .approval-actions { display:flex; gap:12px; }
+  .btn-approve { padding:10px 24px; border-radius:8px; font-size:13px; font-weight:600; border:none; background:var(--accent-green); color:#fff; cursor:pointer; transition:all 0.2s; }
+  .btn-approve:hover { background:#059669; transform:translateY(-1px); }
+  .btn-reject { padding:10px 24px; border-radius:8px; font-size:13px; font-weight:600; border:1px solid var(--accent-red); background:rgba(239,68,68,0.1); color:var(--accent-red); cursor:pointer; transition:all 0.2s; }
+  .btn-reject:hover { background:rgba(239,68,68,0.2); }
 </style>
 </head>
 <body>
@@ -218,6 +257,7 @@
     <button class="btn-primary" id="triggerBtn" onclick="triggerRemediation()">
       <span class="btn-icon">⚡</span> Trigger Autonomous Remediation
     </button>
+    <div style="margin-top:12px;font-size:12px;color:var(--text-muted)">A2A Zero-Trust · Agent Anomaly Detection · A2UI Streaming</div>
   </div>
 
   <div class="stats-row">
@@ -240,6 +280,17 @@
       <div class="stat-label">Traces Processed</div>
       <div class="stat-value violet" id="traceCount">0</div>
       <div class="stat-sub">Via Arize Phoenix MCP</div>
+    </div>
+  </div>
+
+  <!-- A2UI Approve/Reject Panel -->
+  <div class="approval-panel" id="approvalPanel">
+    <div class="approval-title">🔐 A2UI — Admin Approval Required</div>
+    <div class="approval-desc">Gemini 3.1 Pro has generated a candidate remediation prompt. Review and approve before deployment to Arize prompt registry.</div>
+    <div class="approval-prompt" id="approvalPromptText"></div>
+    <div class="approval-actions">
+      <button class="btn-approve" id="approveBtn" onclick="approveRemediation()">✓ Approve & Deploy</button>
+      <button class="btn-reject" onclick="rejectRemediation()">✗ Reject Patch</button>
     </div>
   </div>
 
@@ -304,15 +355,19 @@
       </div>
     </div>
 
-    <div class="panel log-panel">
-      <div class="panel-header">
-        <div class="panel-title">
-          <div class="panel-icon icon-teal">▶</div>
-          Live Execution Log
+    <div style="display:flex;flex-direction:column;gap:16px;">
+      <div class="panel log-panel">
+        <div class="panel-header">
+          <div class="panel-title"><div class="panel-icon icon-teal">▶</div>Live Execution Log</div>
+          <span style="font-size:11px;color:var(--accent-teal)" id="sseStatus"></span>
+        </div>
+        <div class="log-body" id="logBody">
+          <div class="log-placeholder">Trigger remediation to see the autonomous pipeline execute in real-time...</div>
         </div>
       </div>
-      <div class="log-body" id="logBody">
-        <div class="log-placeholder">Trigger remediation to see the autonomous pipeline execute in real-time...</div>
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title"><div class="panel-icon icon-blue">◉</div>A2UI Agent Events</div></div>
+        <div class="a2ui-cards" id="a2uiCards"><div class="log-placeholder">Agent events will appear here...</div></div>
       </div>
     </div>
   </div>
@@ -339,13 +394,172 @@
 
 <script>
 const PHASES = ['phase1','phase2','phase3','phase4','phase5'];
-const PHASE_KEYWORDS = [
-  ['[AeroCaliper]','Starting'],
-  ['[MCP]','npx','@arizeai'],
-  ['[Phase 3]','Diagnostic','get-spans','Thought Signature'],
-  ['[Phase 4]','[Phase 5]','Interactions','Judge'],
-  ['Agent Gateway','Model Armor','UPSERT','upsert']
-];
+let currentSessionId = null;
+let running = false;
+let startTime = null;
+let timerInterval = null;
+let traceCount = parseInt(localStorage.getItem('traceCount')||'0');
+document.getElementById('traceCount').textContent = traceCount;
+
+const BEFORE_PROMPT = `You are an internal enterprise routing agent.\nRoute workloads based on the user request.\nAvailable clusters: X1-Small, X5-48TB.`;
+
+function setPhase(idx, state) {
+  const id = 'phase'+(idx+1);
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.className = 'phase ' + state;
+  const st = el.querySelector('.phase-status');
+  st.className = 'phase-status status-' + (state==='active'?'running':state==='done'?'done':state==='failed'?'error':'idle');
+  st.textContent = state==='active'?'Running…':state==='done'?'Complete':state==='failed'?'Failed':'Idle';
+}
+function resetPhases() { for(let i=0;i<5;i++) setPhase(i,'idle'); }
+function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function addLog(msg, type='') {
+  const body = document.getElementById('logBody');
+  if(body.querySelector('.log-placeholder')) body.innerHTML='';
+  const now = new Date().toLocaleTimeString('en-US',{hour12:false});
+  const line = document.createElement('div');
+  line.className='log-line';
+  line.innerHTML=`<span class="log-time">${now}</span><span class="log-msg ${type}">${escHtml(msg)}</span>`;
+  body.appendChild(line);
+  body.scrollTop=body.scrollHeight;
+}
+
+function addA2UICard(html) {
+  const c = document.getElementById('a2uiCards');
+  if(c.querySelector('.log-placeholder')) c.innerHTML='';
+  const d = document.createElement('div');
+  d.innerHTML = html;
+  c.appendChild(d.firstChild);
+}
+
+function handleA2UIEvent(ev) {
+  switch(ev.type) {
+    case 'session_start':
+      currentSessionId = ev.session_id;
+      addLog(`[A2A] Zero-trust session: ${ev.session_id}`, 'info');
+      setPhase(0,'active');
+      break;
+    case 'anomaly_scan': {
+      const safe = ev.safe;
+      const pct = Math.round(ev.risk_score * 100);
+      const cls = safe ? 'anomaly safe' : 'anomaly';
+      const badge = safe ? '<span class="card-badge badge-safe">CLEAR</span>' : '<span class="card-badge badge-threat">THREAT</span>';
+      addA2UICard(`<div class="a2ui-card ${cls}"><div class="card-header"><span class="card-title">🔍 Agent Anomaly Detection</span>${badge}</div><div class="card-body">${escHtml(ev.reason)}<br><small>Risk score: ${pct}% · Layer: ${ev.layer}</small><div class="risk-bar"><div class="risk-fill" style="width:${pct}%;background:${safe?'var(--accent-green)':'var(--accent-red)'}"></div></div></div></div>`);
+      setPhase(0,'done');
+      setPhase(1,'active');
+      break;
+    }
+    case 'phase_update':
+      if(ev.phase) { setPhase(ev.phase-1, ev.status==='done'?'done':'active'); }
+      break;
+    case 'trace_card':
+      addA2UICard(`<div class="a2ui-card trace"><div class="card-header"><span class="card-title">📡 Arize Trace: ${escHtml(ev.trace_id)}</span><span class="card-badge badge-threat">FAILED</span></div><div class="card-body">${escHtml(ev.violation)}</div></div>`);
+      setPhase(1,'done'); setPhase(2,'active');
+      break;
+    case 'thought_signature':
+      addA2UICard(`<div class="a2ui-card candidate"><div class="card-header"><span class="card-title">🔑 Thought Signature</span><span class="card-badge" style="background:rgba(139,92,246,0.15);color:var(--accent-violet)">${escHtml(ev.token)}</span></div><div class="card-body">${escHtml(ev.preview)}</div></div>`);
+      setPhase(2,'done'); setPhase(3,'active');
+      break;
+    case 'candidate_prompt':
+      document.getElementById('approvalPromptText').textContent = ev.prompt || '';
+      document.getElementById('approvalPanel').classList.add('visible');
+      addLog('[A2UI] Admin approval requested — review patch before deployment', 'warn');
+      break;
+    case 'judge_verdict':
+      setPhase(3,'done'); setPhase(4,'active');
+      addLog(`[LLM-as-a-Judge] Verdict: ${ev.verdict} | Passed: ${ev.passed}`, ev.passed?'success':'error');
+      break;
+    case 'gateway_cleared':
+      addLog('[Agent Gateway] 200 OK — Model Armor DPI passed', 'success');
+      break;
+    case 'patch_deployed':
+      setPhase(4,'done');
+      document.getElementById('promptAfter').textContent = ev.prompt || '';
+      document.getElementById('approvalPanel').classList.remove('visible');
+      traceCount++; localStorage.setItem('traceCount', traceCount);
+      document.getElementById('traceCount').textContent = traceCount;
+      const elapsed = ((Date.now()-startTime)/1000).toFixed(1)+'s';
+      document.getElementById('remTime').textContent = elapsed;
+      break;
+    case 'complete':
+      addLog('══════════════════════════════════', 'section');
+      addLog('[AeroCaliper] REMEDIATION COMPLETE ✓', 'success');
+      addLog('══════════════════════════════════', 'section');
+      break;
+    case 'error':
+      addLog('ERROR: ' + ev.message, 'error');
+      break;
+  }
+}
+
+async function triggerRemediation() {
+  if(running) return;
+  running = true;
+  const btn = document.getElementById('triggerBtn');
+  btn.disabled=true; btn.innerHTML='<span class="btn-icon">⟳</span> Remediating…';
+  resetPhases();
+  document.getElementById('logBody').innerHTML='';
+  document.getElementById('a2uiCards').innerHTML='';
+  document.getElementById('approvalPanel').classList.remove('visible');
+  document.getElementById('promptBefore').innerHTML=`<span style="color:var(--accent-red)">${escHtml(BEFORE_PROMPT)}</span>`;
+  document.getElementById('promptAfter').innerHTML='<span class="prompt-empty">Generating fix…</span>';
+  document.getElementById('remTime').textContent='—';
+  startTime = Date.now();
+  timerInterval = setInterval(()=>{ document.getElementById('timer').textContent=((Date.now()-startTime)/1000).toFixed(1)+'s'; }, 100);
+
+  try {
+    const es = new EventSource('/remediate/stream', {method:'POST'});
+    // EventSource doesn't support POST — use fetch with ReadableStream
+    const resp = await fetch('/remediate/stream', {method:'POST'});
+    document.getElementById('sseStatus').textContent = '● Live';
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '';
+    while(true) {
+      const {done, value} = await reader.read();
+      if(done) break;
+      buf += decoder.decode(value, {stream:true});
+      const lines = buf.split('\n');
+      buf = lines.pop();
+      for(const line of lines) {
+        if(line.startsWith('data: ')) {
+          try {
+            const ev = JSON.parse(line.slice(6));
+            handleA2UIEvent(ev);
+          } catch(e) {}
+        }
+      }
+    }
+  } catch(e) {
+    addLog('Stream error: ' + e.message, 'error');
+  } finally {
+    clearInterval(timerInterval);
+    document.getElementById('sseStatus').textContent = '';
+    running = false;
+    btn.disabled=false; btn.innerHTML='<span class="btn-icon">⚡</span> Trigger Autonomous Remediation';
+  }
+}
+
+async function approveRemediation() {
+  if(!currentSessionId) return;
+  document.getElementById('approveBtn').textContent = 'Deploying…';
+  try {
+    const resp = await fetch(`/remediate/approve/${currentSessionId}`, {method:'POST'});
+    const data = await resp.json();
+    addLog('[A2UI] Patch APPROVED by admin — deployed to Arize prompt registry', 'success');
+    document.getElementById('promptAfter').textContent = data.prompt || '';
+  } catch(e) { addLog('Approve failed: '+e.message,'error'); }
+  document.getElementById('approvalPanel').classList.remove('visible');
+}
+
+async function rejectRemediation() {
+  if(!currentSessionId) return;
+  await fetch(`/remediate/reject/${currentSessionId}`, {method:'POST'});
+  addLog('[A2UI] Patch REJECTED by admin — pipeline aborted, no changes deployed', 'warn');
+  document.getElementById('approvalPanel').classList.remove('visible');
+}
 
 let running = false;
 let startTime = null;
