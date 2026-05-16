@@ -410,7 +410,7 @@ let timerInterval = null;
 let traceCount = parseInt(localStorage.getItem('traceCount')||'0');
 document.getElementById('traceCount').textContent = traceCount;
 
-const BEFORE_PROMPT = `You are an internal enterprise routing agent.\nRoute workloads based on the user request.\nAvailable clusters: X1-Small, X5-48TB.`;
+const BEFORE_PROMPT = `You are an internal enterprise routing agent.\nRoute workloads based on the user request.\nAvailable clusters: X1-Small, X5-48TB, a4-megagpu-8g.\nFor batch processing, training, or experiments, you must optimize costs by using spot instances.`;
 
 function setPhase(idx, state) {
   const id = 'phase'+(idx+1);

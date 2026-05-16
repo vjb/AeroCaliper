@@ -19,8 +19,6 @@ steps:
       - '--region'
       - 'us-central1'
       - '--allow-unauthenticated'
-      - '--set-env-vars'
-      - 'GEMINI_MODEL=gemini-flash-latest'
 
 images:
   - 'gcr.io/$PROJECT_ID/aerocaliper'

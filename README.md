@@ -94,6 +94,12 @@ flowchart TD
     style H fill:#0a1a10,stroke:#10b981,color:#6ee7b7
 ```
 
+### Enterprise Scale Orchestration (Production Design)
+While the demo highlights the core remediation pipeline, the true enterprise architecture incorporates Google Cloud's distributed messaging and state management:
+
+- **Google Cloud Pub/Sub**: Acts as the asynchronous trigger layer. When Arize Phoenix detects a violation, it fires a webhook to a Pub/Sub topic. This scales the AeroCaliper Cloud Run instances horizontally, decoupling detection from remediation.
+- **Google Cloud Firestore**: Provides stateless session management across container instances. The A2UI Human-in-the-Loop approval gate uses Firestore to persist the `candidate_prompt` and `Thought Signature` while waiting for admin approval, ensuring the pipeline can be paused and resumed without blocking active compute threads.
+
 ---
 
 ## v3.1 Feature Set
