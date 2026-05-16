@@ -152,7 +152,7 @@
   .status-error { color:var(--accent-red); border-color:rgba(239,68,68,0.4); background:rgba(239,68,68,0.1); }
 
   /* Log panel */
-  .log-panel { display:flex; flex-direction:column; height:100%; min-height:420px; }
+  .log-panel { display:flex; flex-direction:column; height:420px; overflow:hidden; }
   .log-body { flex:1; padding:16px; overflow-y:auto; font-family:'JetBrains Mono',monospace; font-size:12px; line-height:1.7; }
   .log-body::-webkit-scrollbar { width:4px; }
   .log-body::-webkit-scrollbar-track { background:transparent; }
@@ -168,8 +168,8 @@
   .log-placeholder { color:var(--text-muted); font-style:italic; padding:40px 0; text-align:center; }
 
   /* Prompt comparison */
-  .comparison-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; padding:16px; }
-  .prompt-box { border-radius:10px; overflow:hidden; border:1px solid var(--border); display:flex; flex-direction:column; height:220px; }
+  .comparison-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; padding:16px; height:220px; }
+  .prompt-box { border-radius:10px; overflow:hidden; border:1px solid var(--border); display:flex; flex-direction:column; height:100%; }
   .prompt-label { padding:8px 12px; font-size:11px; font-weight:600; letter-spacing:0.05em; text-transform:uppercase; flex-shrink:0; }
   .prompt-label.before { background:rgba(239,68,68,0.1); color:var(--accent-red); border-bottom:1px solid rgba(239,68,68,0.2); }
   .prompt-label.after { background:rgba(16,185,129,0.1); color:var(--accent-green); border-bottom:1px solid rgba(16,185,129,0.2); }
@@ -198,8 +198,8 @@
   #timer { font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text-muted); }
 
   /* A2UI Cards */
-  .a2ui-section { margin-bottom:20px; }
-  .a2ui-cards { display:flex; flex-direction:column; gap:12px; padding:16px; max-height: 380px; overflow-y: auto; }
+  .a2ui-section { margin-bottom:20px; height: 380px; display:flex; flex-direction:column; }
+  .a2ui-cards { display:flex; flex-direction:column; gap:12px; padding:16px; flex:1; overflow-y:auto; }
   .a2ui-cards::-webkit-scrollbar { width:4px; }
   .a2ui-cards::-webkit-scrollbar-track { background:transparent; }
   .a2ui-cards::-webkit-scrollbar-thumb { background:var(--bg-elevated); border-radius:4px; }
