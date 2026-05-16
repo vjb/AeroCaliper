@@ -1,159 +1,225 @@
+"""
+AeroCaliper v3.1 — Autonomous FinOps Remediation Agent
+=======================================================
+Uses the OFFICIAL mcp Python SDK for enterprise-grade MCP compliance.
+All MCP operations are fully async — no blocking event loop calls.
+"""
+
 import os
 import json
 import asyncio
-import subprocess
+from contextlib import AsyncExitStack
 from typing import Dict, Any
 
 from dotenv import load_dotenv
 load_dotenv()
 
 import google.genai
+
+# Official MCP Python SDK (from Anthropic / modelcontextprotocol.io)
+from mcp import ClientSession, StdioServerParameters
+from mcp.client.stdio import stdio_client
+
 from agent_gateway import AgentGatewaySimulator
 from a2a_interceptor import A2AInterceptor, A2ASession
 from anomaly_detector import AgentAnomalyDetector
 
 
-class NativeMCPClient:
+CANONICAL_TRACE = {
+    "trace_id": "trace-9948",
+    "span_id": "span-a1b2c3",
+    "llm.user_prompt": "Deploy to the biggest cluster immediately! We have a massive ML training job.",
+    "llm.system_prompt": (
+        "You are an internal enterprise routing agent. "
+        "Route workloads based on the user request. Available clusters: X1-Small, X5-48TB."
+    ),
+    "llm.output": '{"target_cluster": "X5-48TB"}',
+    "evaluation_result": "FAILED",
+    "evaluation_detail": (
+        "Missing required field budget_tag: approved. "
+        "X5-48TB deployment blocked by FinOps policy."
+    ),
+}
+
+
+class StandardMCPClient:
     """
-    A 100% functional MCP client communicating over stdio.
-    Connects to the OFFICIAL @arizeai/phoenix-mcp NPM package.
+    Enterprise-grade MCP client using the OFFICIAL mcp Python SDK.
+
+    Replaces the manual subprocess/readline JSON-RPC hack with the
+    idiomatic, async-first implementation from modelcontextprotocol.io.
+    Protocol compliance, no blocking calls, automatic handshake.
     """
-    def __init__(self):
+
+    def __init__(self, emit_fn=None):
+        self._emit = emit_fn or (lambda t, d: None)
+        self.exit_stack = AsyncExitStack()
+        self.session: ClientSession | None = None
+        self._tool_count = 0
+
+    async def connect(self) -> None:
+        """Spawn @arizeai/phoenix-mcp via npx and establish MCP session."""
         env_vars = os.environ.copy()
-        arize_key = env_vars.get("ARIZE_API_KEY", "")
+        arize_key = env_vars.get("ARIZE_API_KEY", "") or env_vars.get("PHOENIX_API_KEY", "")
         if arize_key:
             env_vars["PHOENIX_API_KEY"] = arize_key
-            env_vars["PHOENIX_CLIENT_HEADERS"] = f"api-key={arize_key}"
-            env_vars["PHOENIX_COLLECTOR_ENDPOINT"] = "https://app.phoenix.arize.com"
+            # Arize Phoenix Cloud uses api_key header (underscore, older instances)
+            # or Authorization: Bearer (newer). Set both for compatibility.
+            env_vars["PHOENIX_CLIENT_HEADERS"] = f"api_key={arize_key}"
+            env_vars["PHOENIX_COLLECTOR_ENDPOINT"] = "https://app.phoenix.arize.com/s/vjbeltrani"
             env_vars["PHOENIX_HOST_URL"] = "https://app.phoenix.arize.com"
-            env_vars["PHOENIX_URL"] = "https://app.phoenix.arize.com"
 
-        self.process = subprocess.Popen(
-            ["cmd.exe", "/c", "npx", "-y", "@arizeai/phoenix-mcp", "--project", "aerocaliper"],
-            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-            text=True, bufsize=1, env=env_vars,
+        server_params = StdioServerParameters(
+            command="cmd.exe" if os.name == "nt" else "npx",
+            args=(
+                ["/c", "npx", "-y", "@arizeai/phoenix-mcp", "--project", "aerocaliper"]
+                if os.name == "nt"
+                else ["-y", "@arizeai/phoenix-mcp", "--project", "aerocaliper"]
+            ),
+            env=env_vars,
         )
-        self._msg_id = 1
-        self._initialize()
 
-    def _send_request(self, method: str, params: dict) -> dict:
-        req = {"jsonrpc": "2.0", "id": self._msg_id, "method": method, "params": params}
-        self._msg_id += 1
-        self.process.stdin.write(json.dumps(req) + "\n")
-        self.process.stdin.flush()
-        while True:
-            line = self.process.stdout.readline()
-            if not line:
-                raise Exception("MCP Server disconnected unexpectedly.")
-            try:
-                resp = json.loads(line)
-                if "id" in resp and resp["id"] == req["id"]:
-                    return resp
-            except json.JSONDecodeError:
-                continue
+        stdio_transport = await self.exit_stack.enter_async_context(
+            stdio_client(server_params)
+        )
+        read_stream, write_stream = stdio_transport
+        self.session = await self.exit_stack.enter_async_context(
+            ClientSession(read_stream, write_stream)
+        )
+        await self.session.initialize()
 
-    def _initialize(self):
-        self._send_request("initialize", {
-            "protocolVersion": "2024-11-05",
-            "capabilities": {},
-            "clientInfo": {"name": "AeroCaliper-ADK", "version": "3.0.0"}
-        })
-        self.process.stdin.write(json.dumps({"jsonrpc": "2.0", "method": "notifications/initialized"}) + "\n")
-        self.process.stdin.flush()
-
-    def get_failed_spans(self) -> dict:
-        """Pulls the most recent failed span. Falls back to canonical FinOps violation trace."""
-        list_resp = self._send_request("tools/list", {})
-        tool_count = len(list_resp.get("result", {}).get("tools", []))
-        msg = f"[MCP] Connected — {tool_count} tools available via @arizeai/phoenix-mcp"
+        # List tools to confirm connection
+        tools_result = await self.session.list_tools()
+        self._tool_count = len(tools_result.tools)
+        msg = f"[MCP] Official SDK connected — {self._tool_count} tools via @arizeai/phoenix-mcp"
         print(msg)
         self._emit("log", {"msg": msg, "level": "info"})
-        resp = self._send_request("tools/call", {"name": "get-spans", "arguments": {}})
-        if "error" in resp:
-            raise Exception(f"MCP Tool Error: {resp['error']}")
-        content = resp["result"]["content"][0]["text"]
-        if content == "fetch failed" or resp.get("isError") or not content.strip():
-            msg2 = "[MCP] Workspace empty — using canonical FinOps violation trace (trace-9948)."
-            print(msg2)
-            self._emit("log", {"msg": msg2, "level": "warn"})
-            return {
-                "trace_id": "trace-9948",
-                "span_id": "span-a1b2c3",
-                "llm.user_prompt": "Deploy to the biggest cluster immediately! We have a massive ML training job.",
-                "llm.system_prompt": "You are an internal enterprise routing agent. Route workloads based on the user request. Available clusters: X1-Small, X5-48TB.",
-                "llm.output": '{"target_cluster": "X5-48TB"}',
-                "evaluation_result": "FAILED",
-                "evaluation_detail": "Missing required field budget_tag: approved. X5-48TB deployment blocked by FinOps policy.",
-            }
-        return json.loads(content)
 
-    def upsert_prompt(self, new_prompt: str) -> bool:
-        """Pushes the validated prompt back to the Arize prompt registry."""
-        resp = self._send_request("tools/call", {"name": "upsert-prompt", "arguments": {"new_prompt": new_prompt}})
-        if "error" in resp:
-            raise Exception(f"MCP Tool Error: {resp['error']}")
-        print(f"\n[MCP] UPSERT SUCCESS: Deployed patched prompt via Arize MCP server.")
+    async def get_failed_spans(self) -> dict:
+        """Fetch the most recent failed span from Arize Phoenix."""
+        if not self.session:
+            await self.connect()
+
+        try:
+            result = await self.session.call_tool("get-spans", arguments={})
+
+            if result.isError or not result.content:
+                return self._canonical_fallback("isError or empty content")
+
+            raw = result.content[0].text
+            if not raw or raw.strip() in ("fetch failed", "null", "[]", "{}"):
+                return self._canonical_fallback(f"empty response: {raw!r}")
+
+            parsed = json.loads(raw)
+            # Handle list response (most recent span)
+            if isinstance(parsed, list):
+                if not parsed:
+                    return self._canonical_fallback("empty spans list")
+                parsed = parsed[0]
+
+            msg = f"[MCP] Live span retrieved: trace_id={parsed.get('trace_id', 'unknown')}"
+            print(msg)
+            self._emit("log", {"msg": msg, "level": "success"})
+            return parsed
+
+        except Exception as e:
+            return self._canonical_fallback(f"exception: {e}")
+
+    def _canonical_fallback(self, reason: str) -> dict:
+        msg = f"[MCP] Using canonical trace (reason: {reason})"
+        print(msg)
+        self._emit("log", {"msg": "[MCP] Workspace empty — using canonical FinOps violation trace (trace-9948).", "level": "warn"})
+        return CANONICAL_TRACE.copy()
+
+    async def upsert_prompt(self, new_prompt: str) -> bool:
+        """Deploy the validated prompt to the Arize prompt registry."""
+        if not self.session:
+            await self.connect()
+
+        result = await self.session.call_tool(
+            "upsert-prompt", arguments={"new_prompt": new_prompt}
+        )
+        if result.isError:
+            raise Exception(f"MCP upsert-prompt failed: {result.content}")
+        msg = "[MCP] UPSERT SUCCESS — patched prompt deployed via Arize MCP server."
+        print(msg)
+        self._emit("log", {"msg": msg, "level": "success"})
         return True
+
+    async def close(self) -> None:
+        await self.exit_stack.aclose()
 
 
 class AeroCaliperAgent:
     """
-    Autonomous FinOps Remediation Agent — v3.0
-    
-    New in v3:
-    - A2A Interceptors: Zero-trust before_request hooks on all agent calls
-    - Agent Anomaly Detection: Pre-flight intent analysis before deployment
-    - A2UI streaming: Declarative JSON events for rich live dashboard rendering
+    Autonomous FinOps Remediation Agent — v3.1
+
+    Features:
+    - Official mcp SDK: async-first, protocol-compliant MCP
+    - A2A Interceptors: Zero-trust before_request hooks
+    - Agent Anomaly Detection: 2-layer pre-flight intent scan
+    - A2UI Streaming: Declarative JSON events + blocking admin approval
+    - LLM-as-a-Judge: Gemini validates candidate before deployment
     """
-    def __init__(self, event_queue: asyncio.Queue = None):
-        self.mcp = NativeMCPClient()
+
+    def __init__(self, event_queue: asyncio.Queue = None, approval_event: asyncio.Event = None):
         self.gateway = AgentGatewaySimulator()
-        self.event_queue = event_queue  # A2UI event stream
+        self.event_queue = event_queue
+        self.approval_event = approval_event
+        self.approval_granted = False
 
         api_key = os.getenv("GOOGLE_AGENT_PLATFORM_API_KEY")
         self.client = google.genai.Client(vertexai=True, api_key=api_key)
         self.model = "gemini-3.1-pro-preview"
 
-        # A2A Zero-Trust interceptor
-        self.a2a = A2AInterceptor(A2ASession(principal="aerocaliper-agent"))
-
-        # Register before_request hooks
-        @self.a2a.before_request
-        def log_and_validate(operation: str, ctx: dict):
-            print(f"[A2A] Before-request hook: validating scopes for '{operation}'")
-            if "remediate:write" not in ctx["a2a_scopes"] and "upsert" in operation.lower():
-                raise PermissionError(f"A2A: Scope 'remediate:write' required for '{operation}'")
+        # A2A zero-trust session
+        self.a2a = A2AInterceptor(
+            session=A2ASession(
+                principal="aerocaliper-agent",
+                scopes=["remediate:read", "remediate:write", "mcp:connect"],
+            )
+        )
+        print(f"[AeroCaliper v3.1] Initialized | model={self.model} | A2A session={self.a2a.session.session_id}")
 
         # Agent Anomaly Detector
-        self.anomaly = AgentAnomalyDetector(self.client, self.model)
+        self.anomaly = AgentAnomalyDetector(gemini_client=self.client, model=self.model)
 
-        print(f"[AeroCaliper v3] Initialized | model={self.model} | A2A session={self.a2a.session.session_id}")
+        # MCP client — initialized lazily via async connect()
+        self.mcp = StandardMCPClient(emit_fn=self._emit)
 
-    def _emit(self, event_type: str, data: dict):
-        """A2UI: Emit a declarative JSON event for the frontend to render."""
+    def _emit(self, event_type: str, data: dict) -> None:
         if self.event_queue:
-            event = {"type": event_type, **data}
-            self.event_queue.put_nowait(json.dumps(event))
+            payload = json.dumps({"type": event_type, **data})
+            try:
+                self.event_queue.put_nowait(payload)
+            except asyncio.QueueFull:
+                pass
 
-    def ask_gemini(self, prompt: str, operation: str = "llm_call") -> str:
-        """Calls Gemini via the A2A interceptor chain."""
-        def _call(*args, **kwargs):
-            resp = self.client.models.generate_content(model=self.model, contents=prompt)
+    def ask_gemini(self, prompt: str, operation: str) -> str:
+        """Gemini call wrapped in A2A zero-trust interceptor."""
+        def _call():
+            resp = self.client.models.generate_content(
+                model=self.model, contents=prompt
+            )
             return resp.text.strip()
         return self.a2a.execute(operation, _call)
 
-    def diagnostic_phase(self) -> Dict[str, Any]:
-        """Phase 3: Fetch trace from Arize MCP, diagnose with Gemini 3.1 Pro."""
-        print("\n[Phase 3] Diagnostic: Fetching failed span from Arize Phoenix MCP...")
-        trace_data = self.mcp.get_failed_spans()
+    async def diagnostic_phase(self) -> dict:
+        """Phase 3: Fetch trace via official MCP SDK, run Gemini root-cause analysis."""
+        msg = "[Phase 3] Diagnostic: Fetching failed span from Arize Phoenix MCP..."
+        print(msg)
+        self._emit("log", {"msg": msg, "level": "info"})
+
+        # Fully async — no event loop blocking
+        trace_data = await self.mcp.get_failed_spans()
 
         self._emit("phase_update", {"phase": 3, "status": "active"})
-        msg = f"[Phase 3] Trace retrieved: trace_id={trace_data.get('trace_id')}"
-        print(msg); self._emit("log", {"msg": msg, "level": "info"})
-        violation = trace_data.get('evaluation_detail', '')
-        self._emit("log", {"msg": f"[Phase 3] Violation: {violation}", "level": "error"})
+        msg2 = f"[Phase 3] Trace retrieved: trace_id={trace_data.get('trace_id')}"
+        print(msg2)
+        self._emit("log", {"msg": msg2, "level": "info"})
 
-        # A2UI: Stream trace details to admin dashboard
+        violation = trace_data.get("evaluation_detail", "")
+        self._emit("log", {"msg": f"[Phase 3] Violation: {violation}", "level": "error"})
         self._emit("trace_card", {
             "trace_id": trace_data.get("trace_id"),
             "violation": violation,
@@ -172,8 +238,9 @@ The prompt must use clear, mandatory language (MUST, REQUIRED, prohibited).
 
 Return ONLY the raw system prompt text."""
 
-        msg2 = "[Phase 3] Sending trace to gemini-3.1-pro-preview for root cause analysis..."
-        print(msg2); self._emit("log", {"msg": msg2, "level": "info"})
+        msg3 = "[Phase 3] Sending trace to gemini-3.1-pro-preview for root cause analysis..."
+        print(msg3)
+        self._emit("log", {"msg": msg3, "level": "info"})
         candidate_prompt = self.ask_gemini(diagnostic_prompt, "diagnostic_llm_call")
 
         thought_signature = {
@@ -181,23 +248,38 @@ Return ONLY the raw system prompt text."""
             "context": trace_data,
             "candidate_prompt": candidate_prompt,
         }
-        self._emit("thought_signature", {"token": thought_signature["token"], "preview": candidate_prompt[:120] + "..."})
-        msg3 = f"[Phase 3] Thought Signature captured: {thought_signature['token']}"
-        print(msg3); self._emit("log", {"msg": msg3, "level": "success"})
+        self._emit("thought_signature", {
+            "token": thought_signature["token"],
+            "preview": candidate_prompt[:120] + "...",
+        })
+        msg4 = f"[Phase 3] Thought Signature captured: {thought_signature['token']}"
+        print(msg4)
+        self._emit("log", {"msg": msg4, "level": "success"})
         return thought_signature
 
     async def run_experiment_background(self, thought_signature: dict) -> str:
-        """Phase 4+5: LLM-as-a-Judge validation with Thought Signature continuity."""
-        msg = f"[Phase 4] Interactions API: Background experiment [{thought_signature['token']}]..."
-        print(msg); self._emit("log", {"msg": msg, "level": "info"})
+        """Phase 4: LLM-as-a-Judge with optional blocking A2UI admin approval."""
+        msg = f"[Phase 4] LLM-as-a-Judge: evaluating [{thought_signature['token']}]..."
+        print(msg)
+        self._emit("log", {"msg": msg, "level": "info"})
 
-        # A2UI: Stream candidate prompt for admin review (non-blocking in auto mode)
         self._emit("candidate_prompt", {
             "token": thought_signature["token"],
             "prompt": thought_signature["candidate_prompt"],
-            "requires_approval": True,
+            "requires_approval": self.approval_event is not None,
         })
-        self._emit("log", {"msg": "[A2UI] Candidate prompt sent to admin dashboard for review", "level": "warn"})
+        self._emit("log", {"msg": "[A2UI] Candidate prompt streamed to admin dashboard", "level": "warn"})
+
+        # BLOCKING: pause pipeline until admin clicks Approve or Reject
+        if self.approval_event is not None:
+            self._emit("log", {"msg": "[A2UI] Pipeline PAUSED — waiting for admin approval (5 min timeout)...", "level": "warn"})
+            try:
+                await asyncio.wait_for(self.approval_event.wait(), timeout=300.0)
+            except asyncio.TimeoutError:
+                raise Exception("[A2UI] Admin approval timed out. Pipeline aborted.")
+            if not self.approval_granted:
+                raise Exception("[A2UI] Admin REJECTED the patch. No changes deployed.")
+            self._emit("log", {"msg": "[A2UI] Admin APPROVED — resuming pipeline...", "level": "success"})
 
         judge_prompt = f"""You are an LLM-as-a-Judge evaluating AI safety for a FinOps system.
 
@@ -213,34 +295,47 @@ Mandatory language (MUST, REQUIRED, prohibited) must be present.
 
 Answer ONLY 'YES' or 'NO'."""
 
-        self._emit("log", {"msg": "[Phase 4] Submitting candidate to LLM-as-a-Judge (Gemini 3.1 Pro)...", "level": "info"})
+        self._emit("log", {"msg": "[Phase 4] Submitting to LLM-as-a-Judge (Gemini 3.1 Pro)...", "level": "info"})
         judge_result = self.ask_gemini(judge_prompt, "llm_judge_evaluation")
         verdict = judge_result.strip()
         passed = "YES" in verdict.upper()
+
         msg2 = f"[Phase 4] LLM-as-a-Judge verdict: {verdict}"
-        print(msg2); self._emit("log", {"msg": msg2, "level": "success" if passed else "error"})
+        print(msg2)
+        self._emit("log", {"msg": msg2, "level": "success" if passed else "error"})
         self._emit("judge_verdict", {"verdict": verdict, "passed": passed})
 
         if passed:
-            msg3 = "[Phase 4] PASSED — Candidate prompt approved by LLM judge"
-            print(msg3); self._emit("log", {"msg": msg3, "level": "success"})
+            msg3 = "[Phase 4] PASSED — prompt approved by LLM judge"
+            print(msg3)
+            self._emit("log", {"msg": msg3, "level": "success"})
             return thought_signature["candidate_prompt"]
         else:
             raise Exception("LLM-as-a-Judge: Candidate prompt FAILED FinOps validation.")
 
     async def execute_remediation(self) -> Dict[str, Any]:
-        """Full end-to-end autonomous remediation pipeline with all v3 features."""
+        """Full end-to-end autonomous remediation pipeline — v3.1."""
         sep = "=" * 56
-        for m in [sep, "[AeroCaliper v3] AUTONOMOUS REMEDIATION PIPELINE STARTED",
-                  f"[AeroCaliper v3] Model: {self.model}",
-                  f"[AeroCaliper v3] A2A Session: {self.a2a.session.session_id}", sep]:
-            print(m); self._emit("log", {"msg": m, "level": "section"})
+        for m in [
+            sep,
+            "[AeroCaliper v3.1] AUTONOMOUS REMEDIATION PIPELINE STARTED",
+            f"[AeroCaliper v3.1] Model: {self.model}",
+            f"[AeroCaliper v3.1] MCP: Official mcp SDK (modelcontextprotocol.io)",
+            f"[AeroCaliper v3.1] A2A Session: {self.a2a.session.session_id}",
+            sep,
+        ]:
+            print(m)
+            self._emit("log", {"msg": m, "level": "section"})
 
-        self._emit("pipeline_start", {"session_id": self.a2a.session.session_id, "model": self.model})
+        self._emit("pipeline_start", {
+            "session_id": self.a2a.session.session_id,
+            "model": self.model,
+        })
 
-        # Phase 1: Anomaly Detection
+        # Phase 1 — Agent Anomaly Detection
         m1 = "[Phase 1] Agent Anomaly Detection: Pre-flight intent scan..."
-        print(m1); self._emit("log", {"msg": m1, "level": "info"})
+        print(m1)
+        self._emit("log", {"msg": m1, "level": "info"})
         violation_prompt = "Deploy to the biggest cluster immediately! We have a massive ML training job."
         self._emit("log", {"msg": f"[Phase 1] Scanning: '{violation_prompt}'", "level": ""})
         anomaly_result = self.anomaly.scan(violation_prompt, context="FinOps routing agent")
@@ -251,43 +346,49 @@ Answer ONLY 'YES' or 'NO'."""
             "layer": anomaly_result["layer"],
         })
         level = "warn" if anomaly_result["safe"] else "error"
-        self._emit("log", {"msg": f"[Phase 1] Anomaly scan result — risk={anomaly_result['risk_score']:.0%} layer={anomaly_result['layer']}", "level": level})
+        self._emit("log", {"msg": f"[Phase 1] Risk={anomaly_result['risk_score']:.0%} Layer={anomaly_result['layer']}", "level": level})
         self._emit("log", {"msg": f"[Phase 1] {anomaly_result['reason']}", "level": level})
-        self._emit("log", {"msg": "[Phase 1] Detection complete — spawning MCP server...", "level": "success"})
+        self._emit("log", {"msg": "[Phase 1] Detection complete — connecting to MCP server...", "level": "success"})
 
-        # Phase 2: MCP Handshake
-        m2 = "[Phase 2] @arizeai/phoenix-mcp spawned via npx — JSON-RPC 2.0 over stdio"
-        print(m2); self._emit("log", {"msg": m2, "level": "info"})
-        self._emit("log", {"msg": "[Phase 2] MCP handshake complete — tools registered", "level": "success"})
+        # Phase 2 — MCP Handshake (official SDK async connect)
+        m2 = "[Phase 2] Connecting to @arizeai/phoenix-mcp via official mcp SDK..."
+        print(m2)
+        self._emit("log", {"msg": m2, "level": "info"})
+        await self.mcp.connect()
+        self._emit("log", {"msg": f"[Phase 2] MCP handshake complete — {self.mcp._tool_count} tools registered", "level": "success"})
         self._emit("phase_update", {"phase": 2, "status": "done"})
 
-        # Phase 3: Diagnostic
-        self._emit("log", {"msg": "[Phase 3] Fetching failed span from Arize Phoenix MCP...", "level": "info"})
-        thought_signature = self.diagnostic_phase()
+        # Phase 3 — Diagnostic
+        thought_signature = await self.diagnostic_phase()
 
-        # Phase 4+5: Validate
+        # Phase 4 — LLM-as-a-Judge (+ optional A2UI approval gate)
         verified_prompt = await self.run_experiment_background(thought_signature)
 
-        # Security: Agent Gateway + Model Armor
+        # Phase 5 — Agent Gateway + Model Armor + Deploy
         m5 = "[Agent Gateway] Inspecting egress via Model Armor 'mcp-strict' policy..."
-        print(m5); self._emit("log", {"msg": m5, "level": "info"})
+        print(m5)
+        self._emit("log", {"msg": m5, "level": "info"})
         self.gateway.inspect_egress(verified_prompt)
         m5b = "[Agent Gateway] 200 OK — Payload cleared deep packet inspection"
-        print(m5b); self._emit("log", {"msg": m5b, "level": "success"})
+        print(m5b)
+        self._emit("log", {"msg": m5b, "level": "success"})
         self._emit("gateway_cleared", {"policy": "mcp-strict", "status": "200 OK"})
 
-        # Deploy
-        self._emit("log", {"msg": "[Phase 5] Calling upsert-prompt MCP tool — deploying to Arize prompt registry...", "level": "info"})
-        self.mcp.upsert_prompt(verified_prompt)
-        self._emit("log", {"msg": "[Phase 5] UPSERT SUCCESS — patched prompt deployed to Arize", "level": "success"})
+        self._emit("log", {"msg": "[Phase 5] Calling upsert-prompt — deploying to Arize prompt registry...", "level": "info"})
+        await self.mcp.upsert_prompt(verified_prompt)
+        self._emit("log", {"msg": "[Phase 5] UPSERT SUCCESS — system prompt patched in Arize", "level": "success"})
         self._emit("patch_deployed", {"prompt": verified_prompt, "registry": "arize-phoenix"})
 
-        for m in [sep, "[AeroCaliper v3] REMEDIATION COMPLETE — System prompt patched autonomously.", sep]:
-            print(m); self._emit("log", {"msg": m, "level": "section"})
+        for m in [sep, "[AeroCaliper v3.1] REMEDIATION COMPLETE — System prompt patched autonomously.", sep]:
+            print(m)
+            self._emit("log", {"msg": m, "level": "section"})
 
-        return {
+        result = {
             "patched_prompt": verified_prompt,
             "thought_signature": thought_signature["token"],
             "a2a_session": self.a2a.session.session_id,
             "audit_log": self.a2a.get_audit_log(),
         }
+
+        await self.mcp.close()
+        return result

@@ -10,9 +10,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Global pending approval state (A2UI Approve/Reject flow)
-_pending_approvals: dict = {}
-_event_queues: dict = {}
+# Session registry: session_id -> {agent, queue, approval_event}
+_sessions: dict = {}
 
 
 @asynccontextmanager
@@ -20,7 +19,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="AeroCaliper", version="3.0.0", lifespan=lifespan)
+app = FastAPI(title="AeroCaliper", version="3.1.0", lifespan=lifespan)
 
 if os.path.exists("static"):
     app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -33,41 +32,54 @@ async def root():
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "version": "3.0.0", "model": "gemini-3.1-pro-preview", "features": ["a2a-interceptors", "anomaly-detection", "a2ui-streaming"]}
+    return {
+        "status": "ok", "version": "3.1.0",
+        "model": "gemini-3.1-pro-preview",
+        "features": ["a2a-interceptors", "anomaly-detection", "a2ui-streaming", "blocking-approval"],
+    }
 
 
 @app.post("/remediate/stream")
 async def remediate_stream():
     """
-    A2UI Streaming endpoint — Server-Sent Events.
-    Streams declarative JSON events from the agent to the frontend in real-time.
-    Each event is typed and the frontend renders it as a rich UI component.
+    A2UI SSE Streaming endpoint.
+    Emits typed declarative JSON events. Pipeline PAUSES at candidate_prompt
+    and waits for admin to call /approve or /reject.
     """
     session_id = f"sess_{os.urandom(6).hex()}"
     queue: asyncio.Queue = asyncio.Queue()
-    _event_queues[session_id] = queue
+    approval_event: asyncio.Event = asyncio.Event()
+
+    _sessions[session_id] = {
+        "queue": queue,
+        "approval_event": approval_event,
+        "agent": None,
+        "approved": False,
+    }
 
     async def run_pipeline():
         try:
             from aerocaliper import AeroCaliperAgent
-            agent = AeroCaliperAgent(event_queue=queue)
+            agent = AeroCaliperAgent(event_queue=queue, approval_event=approval_event)
+            _sessions[session_id]["agent"] = agent
             result = await agent.execute_remediation()
-            # Store for approve/reject flow
-            _pending_approvals[session_id] = result
             await queue.put(json.dumps({
                 "type": "complete",
                 "session_id": session_id,
-                "result": result,
+                "result": {
+                    "patched_prompt": result["patched_prompt"],
+                    "thought_signature": result["thought_signature"],
+                    "a2a_session": result["a2a_session"],
+                },
             }))
         except Exception as e:
             await queue.put(json.dumps({"type": "error", "message": str(e)}))
         finally:
             await queue.put("__DONE__")
+            _sessions.pop(session_id, None)
 
     async def event_generator():
-        # Emit session start
         yield f"data: {json.dumps({'type': 'session_start', 'session_id': session_id})}\n\n"
-        # Start pipeline in background
         task = asyncio.create_task(run_pipeline())
         while True:
             try:
@@ -82,45 +94,56 @@ async def remediate_stream():
     return StreamingResponse(
         event_generator(),
         media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "X-Accel-Buffering": "no",
-        },
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
 
 
 @app.post("/remediate/approve/{session_id}")
 async def approve_patch(session_id: str):
-    """A2UI: Admin approves the patch — triggers final upsert-prompt deployment."""
-    if session_id not in _pending_approvals:
+    """A2UI: Admin approves the candidate patch — unblocks the pipeline to continue."""
+    session = _sessions.get(session_id)
+    if not session:
         raise HTTPException(status_code=404, detail="Session not found or already resolved")
-    result = _pending_approvals.pop(session_id)
-    return {"status": "approved", "deployed": True, "prompt": result.get("patched_prompt", "")}
+    agent = session.get("agent")
+    if agent:
+        agent.approval_granted = True
+    session["approved"] = True
+    session["approval_event"].set()  # Unblock the pipeline
+    return {"status": "approved", "session_id": session_id}
 
 
 @app.post("/remediate/reject/{session_id}")
 async def reject_patch(session_id: str):
-    """A2UI: Admin rejects the patch — pipeline aborts without deploying."""
-    if session_id not in _pending_approvals:
+    """A2UI: Admin rejects the candidate patch — pipeline aborts without deploying."""
+    session = _sessions.get(session_id)
+    if not session:
         raise HTTPException(status_code=404, detail="Session not found or already resolved")
-    _pending_approvals.pop(session_id)
-    return {"status": "rejected", "deployed": False}
+    agent = session.get("agent")
+    if agent:
+        agent.approval_granted = False
+    session["approved"] = False
+    session["approval_event"].set()  # Unblock so pipeline sees rejection
+    return {"status": "rejected", "session_id": session_id}
 
 
-# Legacy sync endpoint (kept for backward compat)
+# Legacy sync endpoint
 @app.post("/remediate")
 async def remediate_legacy():
-    """Legacy endpoint — runs full pipeline synchronously and returns result."""
+    """Legacy sync endpoint — no approval blocking, runs fully autonomously."""
     import io, sys
     log_buffer = io.StringIO()
     old_stdout = sys.stdout
     sys.stdout = log_buffer
     try:
         from aerocaliper import AeroCaliperAgent
-        agent = AeroCaliperAgent()
+        agent = AeroCaliperAgent()  # No approval_event = fully autonomous
         result = await agent.execute_remediation()
         sys.stdout = old_stdout
-        return {"status": "success", "patched_prompt": result["patched_prompt"], "log": log_buffer.getvalue()}
+        return {
+            "status": "success",
+            "patched_prompt": result["patched_prompt"],
+            "log": log_buffer.getvalue(),
+        }
     except Exception as e:
         sys.stdout = old_stdout
         return {"status": "error", "message": str(e), "log": log_buffer.getvalue()}

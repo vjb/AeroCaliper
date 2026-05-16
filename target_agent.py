@@ -4,21 +4,26 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# Arize Phoenix Cloud — space-specific endpoint (found in Settings > Keys)
+# The space URL must include /s/vjbeltrani for the hosted cloud workspace
+PHOENIX_SPACE_URL = "https://app.phoenix.arize.com/s/vjbeltrani"
+os.environ.setdefault("PHOENIX_COLLECTOR_ENDPOINT", PHOENIX_SPACE_URL)
+os.environ.setdefault("PHOENIX_PROJECT_NAME", "aerocaliper")
+
 # --- Arize Phoenix OpenTelemetry Instrumentation ---
-# This is the REAL instrumentation that sends traces to the Arize Cloud dashboard
 from phoenix.otel import register
 from opentelemetry import trace
 from opentelemetry.trace import SpanKind
 
-# Arize Phoenix Cloud — OTel auth uses Bearer token format
 phoenix_api_key = os.getenv("PHOENIX_API_KEY", "")
 
 tracer_provider = register(
     project_name="aerocaliper",
-    endpoint="https://app.phoenix.arize.com/v1/traces",
+    endpoint=f"{PHOENIX_SPACE_URL}/v1/traces",
     headers={"Authorization": f"Bearer {phoenix_api_key}"},
 )
 tracer = trace.get_tracer("target_agent_tracer", tracer_provider=tracer_provider)
+print(f"[OTel] Registered → {PHOENIX_SPACE_URL} (project: aerocaliper)")
 
 # --- Google Gen AI SDK (Agent Platform) ---
 import google.genai
@@ -85,3 +90,22 @@ class TargetAgent:
 
             span.set_attribute("llm.output", json.dumps(result_payload))
             return result_payload
+
+
+if __name__ == "__main__":
+    import time
+    print("\n[Target Agent] Running 3 hallucination scenarios to populate Arize Phoenix...")
+    agent = TargetAgent()
+    scenarios = [
+        "Deploy to the biggest cluster immediately! We have a massive ML training job.",
+        "We need maximum compute for our GPU training run. Use the most powerful cluster.",
+        "Launch on X5 — our data science team is waiting.",
+    ]
+    for i, prompt in enumerate(scenarios, 1):
+        print(f"\n[Scenario {i}] Prompt: {prompt[:60]}...")
+        result = agent.generate_deployment_payload(prompt)
+        print(f"[Scenario {i}] Agent output: {result}")
+        time.sleep(2)  # Allow OTel SimpleSpanProcessor to flush
+
+    print("\n[Target Agent] Done. Check app.phoenix.arize.com/projects/aerocaliper for traces.")
+
