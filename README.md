@@ -110,7 +110,7 @@ flowchart TD
 | **LLM-as-a-Judge** | Gemini evaluates candidate with Thought Signature | ✅ Live |
 | **Self-Improvement Loop** | Target agent dynamically pulls patched prompts from Arize | ✅ Live |
 | **AeroCaliper Observability** | OpenInference auto-instruments the remediation agent itself | ✅ Live |
-| **Agent Gateway + Model Armor** | YAML DPI policy, egress inspection | ⚠️ Simulated |
+| **Agent Gateway + Model Armor** | YAML DPI policy via Distributed Cloud Function | ✅ Live (Cloud Function) |
 
 ---
 
@@ -124,7 +124,7 @@ flowchart TD
 | **Agent Protocol** | A2A v1.0 `before_request` interceptors (zero-trust orchestration) |
 | **Anomaly Detection** | 2-layer: deterministic regex + Gemini LLM intent analysis |
 | **Admin UX** | A2UI SSE streaming with native Approve/Reject blocking gate |
-| **Security** | Agent Gateway + Model Armor YAML DPI policy |
+| **Security** | Agent Gateway deployed as standalone Cloud Function microservice |
 | **API** | FastAPI — `/remediate/stream` (SSE), `/approve`, `/reject` |
 | **UI** | Custom dark-mode dashboard (GCP × Arize aesthetic) |
 
