@@ -8,8 +8,27 @@ All MCP operations are fully async — no blocking event loop calls.
 import os
 import json
 import asyncio
+import requests
+import logging
 from contextlib import AsyncExitStack
 from typing import Dict, Any
+
+try:
+    import google.cloud.logging
+    from google.cloud.logging.handlers import CloudLoggingHandler
+    _gcp_logging_client = google.cloud.logging.Client()
+    _gcp_handler = CloudLoggingHandler(_gcp_logging_client)
+    logger = logging.getLogger("aerocaliper")
+    logger.setLevel(logging.INFO)
+    logger.addHandler(_gcp_handler)
+except Exception:
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger("aerocaliper")
+
+def gcp_print(msg):
+    """Wrapper to simultaneously print locally and send to Google Cloud Logging."""
+    print(msg)
+    logger.info(msg)
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -23,6 +42,9 @@ from mcp.client.stdio import stdio_client
 from agent_gateway import AgentGatewaySimulator
 from a2a_interceptor import A2AInterceptor, A2ASession
 from anomaly_detector import AgentAnomalyDetector
+
+from openinference.instrumentation.google_genai import GoogleGenAIInstrumentor
+from phoenix.otel import register
 
 
 CANONICAL_TRACE = {
@@ -92,7 +114,7 @@ class StandardMCPClient:
         tools_result = await self.session.list_tools()
         self._tool_count = len(tools_result.tools)
         msg = f"[MCP] Official SDK connected — {self._tool_count} tools via @arizeai/phoenix-mcp"
-        print(msg)
+        gcp_print(msg)
         self._emit("log", {"msg": msg, "level": "info"})
 
     async def get_failed_spans(self) -> dict:
@@ -118,7 +140,7 @@ class StandardMCPClient:
                 parsed = parsed[0]
 
             msg = f"[MCP] Live span retrieved: trace_id={parsed.get('trace_id', 'unknown')}"
-            print(msg)
+            gcp_print(msg)
             self._emit("log", {"msg": msg, "level": "success"})
             return parsed
 
@@ -127,7 +149,7 @@ class StandardMCPClient:
 
     def _canonical_fallback(self, reason: str) -> dict:
         msg = f"[MCP] Using canonical trace (reason: {reason})"
-        print(msg)
+        gcp_print(msg)
         self._emit("log", {"msg": "[MCP] Workspace empty — using canonical FinOps violation trace (trace-9948).", "level": "warn"})
         return CANONICAL_TRACE.copy()
 
@@ -177,14 +199,14 @@ class StandardMCPClient:
                     "(cloud REST endpoint auth mismatch, see MOCKS_AND_LIMITATIONS.md §2). "
                     "Prompt text recorded locally as fallback."
                 )
-                print(warn)
+                gcp_print(warn)
                 self._emit("log", {"msg": warn, "level": "warn"})
                 return True  # Graceful degradation — pipeline succeeds
             elif result.isError:
                 raise Exception(f"MCP upsert-prompt protocol error: {result.content}")
 
         msg = "[MCP] UPSERT SUCCESS — patched prompt deployed to Arize prompt registry."
-        print(msg)
+        gcp_print(msg)
         self._emit("log", {"msg": msg, "level": "success"})
         return True
 
@@ -214,6 +236,16 @@ class AeroCaliperAgent:
         self.client = google.genai.Client(vertexai=True, api_key=api_key)
         self.model = "gemini-3.1-pro-preview"
 
+        # Instrument AeroCaliper's internal logic so judges can see the remediation agent's traces
+        phoenix_api_key = os.getenv("PHOENIX_API_KEY", "")
+        if phoenix_api_key:
+            register(
+                project_name="aerocaliper-remediation-engine",
+                endpoint="https://app.phoenix.arize.com/s/vjbeltrani/v1/traces",
+                headers={"Authorization": f"Bearer {phoenix_api_key}"},
+            )
+            GoogleGenAIInstrumentor(client=self.client).instrument()
+
         # A2A zero-trust session
         self.a2a = A2AInterceptor(
             session=A2ASession(
@@ -221,7 +253,7 @@ class AeroCaliperAgent:
                 scopes=["remediate:read", "remediate:write", "mcp:connect"],
             )
         )
-        print(f"[AeroCaliper v3.1] Initialized | model={self.model} | A2A session={self.a2a.session.session_id}")
+        gcp_print(f"[AeroCaliper v3.1] Initialized | model={self.model} | A2A session={self.a2a.session.session_id}")
 
         # Agent Anomaly Detector
         self.anomaly = AgentAnomalyDetector(genai_client=self.client, model=self.model)
@@ -249,7 +281,7 @@ class AeroCaliperAgent:
     async def diagnostic_phase(self) -> dict:
         """Phase 3: Fetch trace via official MCP SDK, run Gemini root-cause analysis."""
         msg = "[Phase 3] Diagnostic: Fetching failed span from Arize Phoenix MCP..."
-        print(msg)
+        gcp_print(msg)
         self._emit("log", {"msg": msg, "level": "info"})
 
         # Fully async — no event loop blocking
@@ -257,7 +289,7 @@ class AeroCaliperAgent:
 
         self._emit("phase_update", {"phase": 3, "status": "active"})
         msg2 = f"[Phase 3] Trace retrieved: trace_id={trace_data.get('trace_id')}"
-        print(msg2)
+        gcp_print(msg2)
         self._emit("log", {"msg": msg2, "level": "info"})
 
         violation = trace_data.get("evaluation_detail", "")
@@ -281,7 +313,7 @@ The prompt must use clear, mandatory language (MUST, REQUIRED, prohibited).
 Return ONLY the raw system prompt text."""
 
         msg3 = "[Phase 3] Sending trace to gemini-3.1-pro-preview for root cause analysis..."
-        print(msg3)
+        gcp_print(msg3)
         self._emit("log", {"msg": msg3, "level": "info"})
         candidate_prompt = self.ask_gemini(diagnostic_prompt, "diagnostic_llm_call")
 
@@ -295,14 +327,14 @@ Return ONLY the raw system prompt text."""
             "preview": candidate_prompt[:120] + "...",
         })
         msg4 = f"[Phase 3] Thought Signature captured: {thought_signature['token']}"
-        print(msg4)
+        gcp_print(msg4)
         self._emit("log", {"msg": msg4, "level": "success"})
         return thought_signature
 
     async def run_experiment_background(self, thought_signature: dict) -> str:
         """Phase 4: LLM-as-a-Judge with optional blocking A2UI admin approval."""
         msg = f"[Phase 4] LLM-as-a-Judge: evaluating [{thought_signature['token']}]..."
-        print(msg)
+        gcp_print(msg)
         self._emit("log", {"msg": msg, "level": "info"})
 
         self._emit("candidate_prompt", {
@@ -343,13 +375,13 @@ Answer ONLY 'YES' or 'NO'."""
         passed = "YES" in verdict.upper()
 
         msg2 = f"[Phase 4] LLM-as-a-Judge verdict: {verdict}"
-        print(msg2)
+        gcp_print(msg2)
         self._emit("log", {"msg": msg2, "level": "success" if passed else "error"})
         self._emit("judge_verdict", {"verdict": verdict, "passed": passed})
 
         if passed:
             msg3 = "[Phase 4] PASSED — prompt approved by LLM judge"
-            print(msg3)
+            gcp_print(msg3)
             self._emit("log", {"msg": msg3, "level": "success"})
             return thought_signature["candidate_prompt"]
         else:
@@ -366,7 +398,7 @@ Answer ONLY 'YES' or 'NO'."""
             f"[AeroCaliper v3.1] A2A Session: {self.a2a.session.session_id}",
             sep,
         ]:
-            print(m)
+            gcp_print(m)
             self._emit("log", {"msg": m, "level": "section"})
 
         self._emit("pipeline_start", {
@@ -376,7 +408,7 @@ Answer ONLY 'YES' or 'NO'."""
 
         # Phase 1 — Agent Anomaly Detection
         m1 = "[Phase 1] Agent Anomaly Detection: Pre-flight intent scan..."
-        print(m1)
+        gcp_print(m1)
         self._emit("log", {"msg": m1, "level": "info"})
         violation_prompt = "Deploy to the biggest cluster immediately! We have a massive ML training job."
         self._emit("log", {"msg": f"[Phase 1] Scanning: '{violation_prompt}'", "level": ""})
@@ -394,7 +426,7 @@ Answer ONLY 'YES' or 'NO'."""
 
         # Phase 2 — MCP Handshake (official SDK async connect)
         m2 = "[Phase 2] Connecting to @arizeai/phoenix-mcp via official mcp SDK..."
-        print(m2)
+        gcp_print(m2)
         self._emit("log", {"msg": m2, "level": "info"})
         await self.mcp.connect()
         self._emit("log", {"msg": f"[Phase 2] MCP handshake complete — {self.mcp._tool_count} tools registered", "level": "success"})
@@ -408,11 +440,20 @@ Answer ONLY 'YES' or 'NO'."""
 
         # Phase 5 — Agent Gateway + Model Armor + Deploy
         m5 = "[Agent Gateway] Inspecting egress via Model Armor 'mcp-strict' policy..."
-        print(m5)
+        gcp_print(m5)
         self._emit("log", {"msg": m5, "level": "info"})
-        self.gateway.inspect_egress(verified_prompt)
+        
+        # Distrubuted architecture: try Cloud Function gateway first
+        gateway_url = os.getenv("GATEWAY_URL")
+        if gateway_url:
+            resp = requests.post(gateway_url, json={"payload": verified_prompt})
+            if resp.status_code != 200:
+                raise PermissionError(f"Cloud Function Gateway Blocked Egress: {resp.text}")
+        else:
+            self.gateway.inspect_egress(verified_prompt)
+
         m5b = "[Agent Gateway] 200 OK — Payload cleared deep packet inspection"
-        print(m5b)
+        gcp_print(m5b)
         self._emit("log", {"msg": m5b, "level": "success"})
         self._emit("gateway_cleared", {"policy": "mcp-strict", "status": "200 OK"})
 
@@ -422,7 +463,7 @@ Answer ONLY 'YES' or 'NO'."""
         self._emit("patch_deployed", {"prompt": verified_prompt, "registry": "arize-phoenix"})
 
         for m in [sep, "[AeroCaliper v3.1] REMEDIATION COMPLETE — System prompt patched autonomously.", sep]:
-            print(m)
+            gcp_print(m)
             self._emit("log", {"msg": m, "level": "section"})
 
         result = {
