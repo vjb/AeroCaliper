@@ -439,7 +439,7 @@ Answer ONLY 'YES' or 'NO'."""
         verified_prompt = await self.run_experiment_background(thought_signature)
 
         # Phase 5 — Agent Gateway + Model Armor + Deploy
-        m5 = "[Agent Gateway] Inspecting egress via Model Armor 'mcp-strict' policy..."
+        m5 = "[Agent Gateway] Inspecting egress via Gateway (Simulating Model Armor 'mcp-strict' policy)..."
         gcp_print(m5)
         self._emit("log", {"msg": m5, "level": "info"})
         

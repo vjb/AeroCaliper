@@ -110,7 +110,7 @@ flowchart TD
 | **LLM-as-a-Judge** | Gemini evaluates candidate with Thought Signature | ✅ Live |
 | **Self-Improvement Loop** | Target agent dynamically pulls patched prompts from Arize | ✅ Live |
 | **AeroCaliper Observability** | OpenInference auto-instruments the remediation agent itself | ✅ Live |
-| **Agent Gateway + Model Armor** | YAML DPI policy via Distributed Cloud Function | ✅ Live (Cloud Function) |
+| **Agent Gateway (Model Armor Simulator)** | YAML DPI policy via Distributed Cloud Function | ✅ Live (Cloud Function) |
 
 ---
 
@@ -147,7 +147,7 @@ AeroCaliper spawns `@arizeai/phoenix-mcp` via `npx` — 27 tools available over 
 The candidate prompt is streamed to the admin dashboard via SSE. The pipeline **pauses** (`asyncio.Event`) until the admin clicks **Approve** or **Reject**. Once approved, a second Gemini session acts as LLM-as-a-Judge with strict FinOps rubric.
 
 ### Phase 5 — Secure Patch & Self-Healing
-Egress is routed through Agent Gateway + Model Armor DPI. `upsert-prompt` MCP deploys the fix to the Arize prompt registry. The target agent then dynamically pulls this patched prompt at boot, completely closing the self-improvement loop.
+Egress is routed through the Agent Gateway (simulating Model Armor DPI). `upsert-prompt` MCP deploys the fix to the Arize prompt registry. The target agent then dynamically pulls this patched prompt at boot, completely closing the self-improvement loop.
 
 *Note: The AeroCaliper remediation agent is also fully instrumented with OpenInference. All Phase 3 diagnostic reasoning and Phase 4 LLM-as-a-Judge evaluations are traced and observable in Arize!*
 
