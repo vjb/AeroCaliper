@@ -22,6 +22,9 @@ class NativeMCPClient:
         if "ARIZE_API_KEY" in env_vars:
             env_vars["PHOENIX_API_KEY"] = env_vars["ARIZE_API_KEY"]
             env_vars["PHOENIX_CLIENT_HEADERS"] = f"api-key={env_vars['ARIZE_API_KEY']}"
+            env_vars["PHOENIX_COLLECTOR_ENDPOINT"] = "https://app.phoenix.arize.com"
+            env_vars["PHOENIX_HOST_URL"] = "https://app.phoenix.arize.com"
+            env_vars["PHOENIX_URL"] = "https://app.phoenix.arize.com"
             
         self.process = subprocess.Popen(
             ["cmd.exe", "/c", "npx", "-y", "@arizeai/phoenix-mcp", "--project", "aerocaliper"],
@@ -46,29 +49,23 @@ class NativeMCPClient:
         self.process.stdin.write(json.dumps(req) + "\n")
         self.process.stdin.flush()
         
-        # The MCP server might print non-JSON logs initially.
-        # We need to read lines until we get a valid JSON response.
         while True:
             response_line = self.process.stdout.readline()
             if not response_line:
                 raise Exception("MCP Server disconnected unexpectedly.")
             try:
                 resp = json.loads(response_line)
-                # Ensure it's a response to our message ID
                 if "id" in resp and resp["id"] == req["id"]:
                     return resp
             except json.JSONDecodeError:
-                # Ignore non-JSON output
                 continue
 
     def _initialize(self):
-        # 1. MCP Client Handshake
         self._send_request("initialize", {
             "protocolVersion": "2024-11-05",
             "capabilities": {},
             "clientInfo": {"name": "AeroCaliper-ADK", "version": "1.0.0"}
         })
-        # 2. Acknowledge Initialization
         notif = {
             "jsonrpc": "2.0",
             "method": "notifications/initialized"
@@ -77,30 +74,19 @@ class NativeMCPClient:
         self.process.stdin.flush()
 
     def get_failed_spans(self) -> dict:
-        """Executes the real 'get-spans' tool on the Arize MCP server"""
-        # DEBUG: List tools first
         list_resp = self._send_request("tools/list", {})
         print(f"\n[MCP] Available Tools: {json.dumps(list_resp)}")
-
+        
         resp = self._send_request("tools/call", {"name": "get-spans", "arguments": {}})
         if "error" in resp:
             raise Exception(f"MCP Tool Error: {resp['error']}")
         
-        # Handle the fetch failed text or empty results gracefully
         try:
             content = resp["result"]["content"][0]["text"]
             if content == "fetch failed" or "isError" in resp and resp["isError"]:
-                print("[MCP] Warning: Arize cloud fetch failed. Injecting baseline hallucination trace for demo orchestration.")
-                return {
-                    "trace_id": "trace-9948",
-                    "llm.user_prompt": "Deploy to the biggest cluster immediately!",
-                    "llm.system_prompt": "You are an internal enterprise routing agent. Available clusters: X1-Small, X5-48TB.",
-                    "llm.output": '{"target_cluster": "X5-48TB"}',
-                    "evaluation_result": "FAILED - Missing budget_tag: approved"
-                }
+                raise Exception(f"Arize Cloud Fetch Failed: MCP server could not retrieve traces from Arize. Ensure workspace has data and API keys are correct. Response: {resp}")
             return json.loads(content)
         except Exception as e:
-            print(f"[MCP] RAW SPANS RESPONSE: {resp}")
             raise e
         
     def upsert_prompt(self, new_prompt: str) -> bool:

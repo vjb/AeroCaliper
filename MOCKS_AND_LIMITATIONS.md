@@ -17,7 +17,5 @@ Per project requirements, this document transparently tracks exactly what compon
 
 1. **Model Armor & Agent Gateway (`agent_gateway.py`)**
    - **Mocked:** We have not deployed actual Google Cloud Model Armor infrastructure. Instead, we built a local Python middleware (`AgentGatewaySimulator`) that parses local YAML files (`infra/model_armor_policy.yaml`) to perform deep packet inspection and block outbound prompt injections, perfectly simulating the GCP service.
-2. **Arize Cloud Trace Fetching (Empty Workspace Fallback)**
-   - **Mocked:** The official MCP server successfully connects, but because the workspace is empty (or network calls are blocked), it returns a `fetch failed` error. To ensure the autonomous orchestration demo doesn't crash, we gracefully inject a hardcoded baseline hallucination trace (`trace-9948`) as a fallback if the real fetch fails.
-3. **Hosting Environment**
+2. **Hosting Environment**
    - **Mocked:** The system is currently running as local Python processes on a Windows development machine. It has not yet been containerized and deployed to Google Cloud Run (which is the goal of Phase 5).
