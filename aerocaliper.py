@@ -126,7 +126,7 @@ class StandardMCPClient:
             result = await self.session.call_tool("get-spans", arguments={"project_identifier": "aerocaliper", "limit": 1})
 
             if result.isError or not result.content:
-                return self._canonical_fallback("isError or empty content")
+                return await self._native_graphql_fallback("MCP tool returned error or empty content")
 
             raw = result.content[0].text
             if not raw or raw.strip() in ("fetch failed", "null", "[]", "{}"):

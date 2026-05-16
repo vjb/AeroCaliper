@@ -1,0 +1,387 @@
+---
+insertId: 7j28kif1xp44h
+labels:
+  python_logger: aerocaliper
+logName: projects/aerocaliper/logs/python
+receiveTimestamp: '2026-05-16T22:54:41.224220504Z'
+resource:
+  labels:
+    configuration_name: aerocaliper-agent
+    location: us-central1
+    project_id: aerocaliper
+    revision_name: aerocaliper-agent-00012-kuf
+    service_name: aerocaliper-agent
+  type: cloud_run_revision
+severity: INFO
+sourceLocation:
+  file: /app/aerocaliper.py
+  function: gcp_print
+  line: '31'
+textPayload: ========================================================
+timestamp: '2026-05-16T22:54:41.109019Z'
+---
+insertId: 7j28kif1xp44g
+labels:
+  python_logger: aerocaliper
+logName: projects/aerocaliper/logs/python
+receiveTimestamp: '2026-05-16T22:54:41.224220504Z'
+resource:
+  labels:
+    configuration_name: aerocaliper-agent
+    location: us-central1
+    project_id: aerocaliper
+    revision_name: aerocaliper-agent-00012-kuf
+    service_name: aerocaliper-agent
+  type: cloud_run_revision
+severity: INFO
+sourceLocation:
+  file: /app/aerocaliper.py
+  function: gcp_print
+  line: '31'
+textPayload: '[AeroCaliper v3.1] REMEDIATION COMPLETE — System prompt patched autonomously.'
+timestamp: '2026-05-16T22:54:41.108972Z'
+---
+insertId: 7j28kif1xp44f
+labels:
+  python_logger: aerocaliper
+logName: projects/aerocaliper/logs/python
+receiveTimestamp: '2026-05-16T22:54:41.224220504Z'
+resource:
+  labels:
+    configuration_name: aerocaliper-agent
+    location: us-central1
+    project_id: aerocaliper
+    revision_name: aerocaliper-agent-00012-kuf
+    service_name: aerocaliper-agent
+  type: cloud_run_revision
+severity: INFO
+sourceLocation:
+  file: /app/aerocaliper.py
+  function: gcp_print
+  line: '31'
+textPayload: ========================================================
+timestamp: '2026-05-16T22:54:41.108911Z'
+---
+insertId: 7j28kif1xp44e
+labels:
+  python_logger: aerocaliper
+logName: projects/aerocaliper/logs/python
+receiveTimestamp: '2026-05-16T22:54:41.224220504Z'
+resource:
+  labels:
+    configuration_name: aerocaliper-agent
+    location: us-central1
+    project_id: aerocaliper
+    revision_name: aerocaliper-agent-00012-kuf
+    service_name: aerocaliper-agent
+  type: cloud_run_revision
+severity: INFO
+sourceLocation:
+  file: /app/aerocaliper.py
+  function: gcp_print
+  line: '31'
+textPayload: "[MCP] upsert-prompt tool called via JSON-RPC — Arize Cloud prompt registry\
+  \ returned 'fetch failed' (cloud REST endpoint auth mismatch, see MOCKS_AND_LIMITATIONS.md\
+  \ §2). Prompt text recorded locally as fallback."
+timestamp: '2026-05-16T22:54:41.108678Z'
+---
+insertId: rheyrff23hu1f
+labels:
+  python_logger: aerocaliper
+logName: projects/aerocaliper/logs/python
+receiveTimestamp: '2026-05-16T22:54:41.117868482Z'
+resource:
+  labels:
+    configuration_name: aerocaliper-agent
+    location: us-central1
+    project_id: aerocaliper
+    revision_name: aerocaliper-agent-00012-kuf
+    service_name: aerocaliper-agent
+  type: cloud_run_revision
+severity: INFO
+sourceLocation:
+  file: /app/aerocaliper.py
+  function: gcp_print
+  line: '31'
+textPayload: '[Agent Gateway] 200 OK — Payload cleared deep packet inspection'
+timestamp: '2026-05-16T22:54:41.091341Z'
+---
+insertId: rheyrff23hu1e
+labels:
+  python_logger: aerocaliper
+logName: projects/aerocaliper/logs/python
+receiveTimestamp: '2026-05-16T22:54:41.117868482Z'
+resource:
+  labels:
+    configuration_name: aerocaliper-agent
+    location: us-central1
+    project_id: aerocaliper
+    revision_name: aerocaliper-agent-00012-kuf
+    service_name: aerocaliper-agent
+  type: cloud_run_revision
+severity: INFO
+sourceLocation:
+  file: /app/aerocaliper.py
+  function: gcp_print
+  line: '31'
+textPayload: "[Agent Gateway] Inspecting egress via Gateway (Simulating Model Armor\
+  \ 'mcp-strict' policy)..."
+timestamp: '2026-05-16T22:54:41.090943Z'
+---
+insertId: rheyrff23hu1d
+labels:
+  python_logger: aerocaliper
+logName: projects/aerocaliper/logs/python
+receiveTimestamp: '2026-05-16T22:54:41.117868482Z'
+resource:
+  labels:
+    configuration_name: aerocaliper-agent
+    location: us-central1
+    project_id: aerocaliper
+    revision_name: aerocaliper-agent-00012-kuf
+    service_name: aerocaliper-agent
+  type: cloud_run_revision
+severity: INFO
+sourceLocation:
+  file: /app/aerocaliper.py
+  function: gcp_print
+  line: '31'
+textPayload: '[Phase 4] PASSED — prompt approved by LLM judge'
+timestamp: '2026-05-16T22:54:41.090873Z'
+---
+insertId: rheyrff23hu1c
+labels:
+  python_logger: aerocaliper
+logName: projects/aerocaliper/logs/python
+receiveTimestamp: '2026-05-16T22:54:41.117868482Z'
+resource:
+  labels:
+    configuration_name: aerocaliper-agent
+    location: us-central1
+    project_id: aerocaliper
+    revision_name: aerocaliper-agent-00012-kuf
+    service_name: aerocaliper-agent
+  type: cloud_run_revision
+severity: INFO
+sourceLocation:
+  file: /app/aerocaliper.py
+  function: gcp_print
+  line: '31'
+textPayload: '[Phase 4] LLM-as-a-Judge verdict: YES'
+timestamp: '2026-05-16T22:54:41.090718Z'
+---
+insertId: 6a08f5b100015f23c5818732
+labels:
+  instanceId: 0007b734d95dc834d5bf9b48cb8194559b1b7e9dcb6c2a4f2c5402fe3a7ae5490d52aea393a4b2254083144a48042c8fa7aed006180e706541c4eedf60b6893167a50b7e417b62e34986b8aab43a7b
+logName: projects/aerocaliper/logs/run.googleapis.com%2Fstderr
+receiveTimestamp: '2026-05-16T22:54:41.324565612Z'
+resource:
+  labels:
+    configuration_name: aerocaliper-agent
+    location: us-central1
+    project_id: aerocaliper
+    revision_name: aerocaliper-agent-00012-kuf
+    service_name: aerocaliper-agent
+  type: cloud_run_revision
+textPayload: "Failed to export span batch code: None, reason: Invalid leading whitespace,\
+  \ reserved character(s), or return character(s) in header value: 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJBcGlLZXk6NSJ9.D-6EA9NOxemmW8Uza-JBCjQjgmK1Yl4cb0oNyvZpPsg\\\
+  n'"
+timestamp: '2026-05-16T22:54:41.089891Z'
+---
+insertId: 6a08f5ad000c3c32759790b6
+labels:
+  instanceId: 0007b734d95dc834d5bf9b48cb8194559b1b7e9dcb6c2a4f2c5402fe3a7ae5490d52aea393a4b2254083144a48042c8fa7aed006180e706541c4eedf60b6893167a50b7e417b62e34986b8aab43a7b
+logName: projects/aerocaliper/logs/run.googleapis.com%2Fstdout
+receiveTimestamp: '2026-05-16T22:54:37.807679480Z'
+resource:
+  labels:
+    configuration_name: aerocaliper-agent
+    location: us-central1
+    project_id: aerocaliper
+    revision_name: aerocaliper-agent-00012-kuf
+    service_name: aerocaliper-agent
+  type: cloud_run_revision
+textPayload: 'INFO:     169.254.169.126:35190 - "POST /remediate/approve/sess_b0e37c38b618
+  HTTP/1.1" 200 OK'
+timestamp: '2026-05-16T22:54:37.801842Z'
+---
+insertId: 6a08f5ad000c3c2f6fb89648
+labels:
+  instanceId: 0007b734d95dc834d5bf9b48cb8194559b1b7e9dcb6c2a4f2c5402fe3a7ae5490d52aea393a4b2254083144a48042c8fa7aed006180e706541c4eedf60b6893167a50b7e417b62e34986b8aab43a7b
+logName: projects/aerocaliper/logs/run.googleapis.com%2Fstdout
+receiveTimestamp: '2026-05-16T22:54:37.807679480Z'
+resource:
+  labels:
+    configuration_name: aerocaliper-agent
+    location: us-central1
+    project_id: aerocaliper
+    revision_name: aerocaliper-agent-00012-kuf
+    service_name: aerocaliper-agent
+  type: cloud_run_revision
+textPayload: '[Phase 4] LLM-as-a-Judge: evaluating [sig_v3_2e8c37]...'
+timestamp: '2026-05-16T22:54:37.801839Z'
+---
+insertId: 6a08f5ad000c3c299ebfacc1
+labels:
+  instanceId: 0007b734d95dc834d5bf9b48cb8194559b1b7e9dcb6c2a4f2c5402fe3a7ae5490d52aea393a4b2254083144a48042c8fa7aed006180e706541c4eedf60b6893167a50b7e417b62e34986b8aab43a7b
+logName: projects/aerocaliper/logs/run.googleapis.com%2Fstdout
+receiveTimestamp: '2026-05-16T22:54:37.807679480Z'
+resource:
+  labels:
+    configuration_name: aerocaliper-agent
+    location: us-central1
+    project_id: aerocaliper
+    revision_name: aerocaliper-agent-00012-kuf
+    service_name: aerocaliper-agent
+  type: cloud_run_revision
+textPayload: '[Phase 3] Thought Signature captured: sig_v3_2e8c37'
+timestamp: '2026-05-16T22:54:37.801833Z'
+---
+insertId: 6a08f5ad000c3c260a9a75cf
+labels:
+  instanceId: 0007b734d95dc834d5bf9b48cb8194559b1b7e9dcb6c2a4f2c5402fe3a7ae5490d52aea393a4b2254083144a48042c8fa7aed006180e706541c4eedf60b6893167a50b7e417b62e34986b8aab43a7b
+logName: projects/aerocaliper/logs/run.googleapis.com%2Fstdout
+receiveTimestamp: '2026-05-16T22:54:37.807679480Z'
+resource:
+  labels:
+    configuration_name: aerocaliper-agent
+    location: us-central1
+    project_id: aerocaliper
+    revision_name: aerocaliper-agent-00012-kuf
+    service_name: aerocaliper-agent
+  type: cloud_run_revision
+textPayload: '[A2A] ✓ Intercepted: diagnostic_llm_call | session=sess_e8029489776'
+timestamp: '2026-05-16T22:54:37.801830Z'
+---
+insertId: 6a08f5ad000c3c23931b29b3
+labels:
+  instanceId: 0007b734d95dc834d5bf9b48cb8194559b1b7e9dcb6c2a4f2c5402fe3a7ae5490d52aea393a4b2254083144a48042c8fa7aed006180e706541c4eedf60b6893167a50b7e417b62e34986b8aab43a7b
+logName: projects/aerocaliper/logs/run.googleapis.com%2Fstdout
+receiveTimestamp: '2026-05-16T22:54:37.807679480Z'
+resource:
+  labels:
+    configuration_name: aerocaliper-agent
+    location: us-central1
+    project_id: aerocaliper
+    revision_name: aerocaliper-agent-00012-kuf
+    service_name: aerocaliper-agent
+  type: cloud_run_revision
+textPayload: '[Phase 3] Sending trace to gemini-3.1-pro-preview for root cause analysis...'
+timestamp: '2026-05-16T22:54:37.801827Z'
+---
+insertId: 6a08f5ad000c3c204ac49d4f
+labels:
+  instanceId: 0007b734d95dc834d5bf9b48cb8194559b1b7e9dcb6c2a4f2c5402fe3a7ae5490d52aea393a4b2254083144a48042c8fa7aed006180e706541c4eedf60b6893167a50b7e417b62e34986b8aab43a7b
+logName: projects/aerocaliper/logs/run.googleapis.com%2Fstdout
+receiveTimestamp: '2026-05-16T22:54:37.807679480Z'
+resource:
+  labels:
+    configuration_name: aerocaliper-agent
+    location: us-central1
+    project_id: aerocaliper
+    revision_name: aerocaliper-agent-00012-kuf
+    service_name: aerocaliper-agent
+  type: cloud_run_revision
+textPayload: '[Phase 3] Trace retrieved: trace_id=trace-9948'
+timestamp: '2026-05-16T22:54:37.801824Z'
+---
+insertId: 6a08f5ad000c3c1cc3770db0
+labels:
+  instanceId: 0007b734d95dc834d5bf9b48cb8194559b1b7e9dcb6c2a4f2c5402fe3a7ae5490d52aea393a4b2254083144a48042c8fa7aed006180e706541c4eedf60b6893167a50b7e417b62e34986b8aab43a7b
+logName: projects/aerocaliper/logs/run.googleapis.com%2Fstdout
+receiveTimestamp: '2026-05-16T22:54:37.807679480Z'
+resource:
+  labels:
+    configuration_name: aerocaliper-agent
+    location: us-central1
+    project_id: aerocaliper
+    revision_name: aerocaliper-agent-00012-kuf
+    service_name: aerocaliper-agent
+  type: cloud_run_revision
+textPayload: '[MCP] Using canonical trace (reason: isError or empty content)'
+timestamp: '2026-05-16T22:54:37.801820Z'
+---
+insertId: 6a08f5ad000c3c10be211242
+labels:
+  instanceId: 0007b734d95dc834d5bf9b48cb8194559b1b7e9dcb6c2a4f2c5402fe3a7ae5490d52aea393a4b2254083144a48042c8fa7aed006180e706541c4eedf60b6893167a50b7e417b62e34986b8aab43a7b
+logName: projects/aerocaliper/logs/run.googleapis.com%2Fstdout
+receiveTimestamp: '2026-05-16T22:54:37.807679480Z'
+resource:
+  labels:
+    configuration_name: aerocaliper-agent
+    location: us-central1
+    project_id: aerocaliper
+    revision_name: aerocaliper-agent-00012-kuf
+    service_name: aerocaliper-agent
+  type: cloud_run_revision
+textPayload: '[Phase 3] Diagnostic: Fetching failed span from Arize Phoenix MCP...'
+timestamp: '2026-05-16T22:54:37.801808Z'
+---
+insertId: 6a08f5ad000c3bfc6d3c13ea
+labels:
+  instanceId: 0007b734d95dc834d5bf9b48cb8194559b1b7e9dcb6c2a4f2c5402fe3a7ae5490d52aea393a4b2254083144a48042c8fa7aed006180e706541c4eedf60b6893167a50b7e417b62e34986b8aab43a7b
+logName: projects/aerocaliper/logs/run.googleapis.com%2Fstdout
+receiveTimestamp: '2026-05-16T22:54:37.807679480Z'
+resource:
+  labels:
+    configuration_name: aerocaliper-agent
+    location: us-central1
+    project_id: aerocaliper
+    revision_name: aerocaliper-agent-00012-kuf
+    service_name: aerocaliper-agent
+  type: cloud_run_revision
+textPayload: '[MCP] Official SDK connected — 27 tools via @arizeai/phoenix-mcp'
+timestamp: '2026-05-16T22:54:37.801788Z'
+---
+httpRequest:
+  latency: 0.003638489s
+  protocol: HTTP/1.1
+  referer: https://aerocaliper-agent-mg7mo672qa-uc.a.run.app/
+  remoteIp: 2603:7002:900:8683:f89f:2076:8cad:5288
+  requestMethod: POST
+  requestSize: '1074'
+  requestUrl: https://aerocaliper-agent-mg7mo672qa-uc.a.run.app/remediate/approve/sess_b0e37c38b618
+  responseSize: '154'
+  serverIp: '2600:1900:4240:200::'
+  status: 200
+  userAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML,
+    like Gecko) Chrome/147.0.0.0 Safari/537.36
+insertId: 6a08f5ad000c3f251ba0fd5d
+labels:
+  instanceId: 0007b734d95dc834d5bf9b48cb8194559b1b7e9dcb6c2a4f2c5402fe3a7ae5490d52aea393a4b2254083144a48042c8fa7aed006180e706541c4eedf60b6893167a50b7e417b62e34986b8aab43a7b
+logName: projects/aerocaliper/logs/run.googleapis.com%2Frequests
+receiveTimestamp: '2026-05-16T22:54:37.809606116Z'
+resource:
+  labels:
+    configuration_name: aerocaliper-agent
+    location: us-central1
+    project_id: aerocaliper
+    revision_name: aerocaliper-agent-00012-kuf
+    service_name: aerocaliper-agent
+  type: cloud_run_revision
+severity: INFO
+spanId: e587f5705d762fc6
+timestamp: '2026-05-16T22:54:37.790143Z'
+trace: projects/aerocaliper/traces/bc88e85c3c6a50effdda709736db15f0
+traceSampled: true
+---
+insertId: 1nfukzbf21zvp3
+labels:
+  python_logger: aerocaliper
+logName: projects/aerocaliper/logs/python
+receiveTimestamp: '2026-05-16T22:54:30.349784761Z'
+resource:
+  labels:
+    configuration_name: aerocaliper-agent
+    location: us-central1
+    project_id: aerocaliper
+    revision_name: aerocaliper-agent-00012-kuf
+    service_name: aerocaliper-agent
+  type: cloud_run_revision
+severity: INFO
+sourceLocation:
+  file: /app/aerocaliper.py
+  function: gcp_print
+  line: '31'
+textPayload: '[Phase 4] LLM-as-a-Judge: evaluating [sig_v3_2e8c37]...'
+timestamp: '2026-05-16T22:54:30.329583Z'
