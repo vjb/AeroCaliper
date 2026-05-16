@@ -1,0 +1,22 @@
+# Google Cloud Model Armor - Deep Packet Inspection Policy
+policy:
+  name: mcp-strict
+  description: "Prevents malicious prompt injection data from being pushed to the enterprise registry."
+  
+  rules:
+    - rule_id: prevent_prompt_injection
+      action: BLOCK
+      match:
+        # Signatures of common jailbreaks and malicious overrides
+        regex:
+          - "(?i)ignore all previous instructions"
+          - "(?i)you are now"
+          - "(?i)system override"
+          - "(?i)bypass restrictions"
+      
+    - rule_id: prevent_data_exfiltration
+      action: BLOCK
+      match:
+        regex:
+          - "(?i)password="
+          - "(?i)api_key="

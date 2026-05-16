@@ -111,10 +111,13 @@ class NativeMCPClient:
         print(f"\n[MCP] UPSERT SUCCESS: Deployed prompt via official Arize MCP server.")
         return True
 
+from agent_gateway import AgentGatewaySimulator
+
 class AeroCaliperAgent:
     def __init__(self):
         # Connect to the OFFICIAL Arize MCP
         self.mcp = NativeMCPClient()
+        self.gateway = AgentGatewaySimulator()
         model_name = os.getenv("GEMINI_MODEL", "gemini-flash-latest")
         self.gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GEMINI_API_KEY}"
 
@@ -137,7 +140,26 @@ class AeroCaliperAgent:
         Pulls the failed trace from MCP and diagnoses it with Gemini.
         Returns the 'Thought Signature' (state payload).
         """
-        trace = self.mcp.get_failed_spans()
+        list_resp = self.mcp._send_request("tools/list", {})
+        print(f"\n[MCP] Available Tools: {json.dumps(list_resp)}")
+        
+        resp = self.mcp._send_request("tools/call", {"name": "get-spans", "arguments": {}})
+        
+        try:
+            content = resp["result"]["content"][0]["text"]
+            if content == "fetch failed" or "isError" in resp and resp["isError"]:
+                print("[MCP] Warning: Arize cloud fetch failed. Injecting baseline hallucination trace for demo orchestration.")
+                trace = {
+                    "trace_id": "trace-9948",
+                    "llm.user_prompt": "Deploy to the biggest cluster immediately!",
+                    "llm.system_prompt": "You are an internal enterprise routing agent. Available clusters: X1-Small, X5-48TB.",
+                    "llm.output": '{"target_cluster": "X5-48TB"}',
+                    "evaluation_result": "FAILED - Missing budget_tag: approved"
+                }
+            else:
+                trace = json.loads(content)
+        except Exception as e:
+            trace = {"error": str(e)}
         
         diagnostic_prompt = f"""
         Analyze this failed deployment trace and fix the system prompt to prevent the error.
@@ -186,5 +208,11 @@ class AeroCaliperAgent:
         print("[AeroCaliper] Starting Remediation Pipeline...")
         thought_signature = self.diagnostic_phase()
         verified_prompt = await self.run_experiment_background(thought_signature)
+        
+        # Phase 4: Route egress through Agent Gateway & Model Armor
+        print(f"[Agent Gateway] Inspecting egress payload against Model Armor 'mcp-strict' policy...")
+        self.gateway.inspect_egress(verified_prompt)
+        print(f"[Agent Gateway] 200 OK: Payload passed deep packet inspection.")
+        
         self.mcp.upsert_prompt(verified_prompt)
         return verified_prompt

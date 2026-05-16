@@ -1,0 +1,12 @@
+# Google Cloud Agent Gateway - Egress Routing Config
+gateway:
+  name: aerocaliper-egress-gateway
+  region: us-central1
+  network: default
+  
+  routes:
+    - name: arize-mcp-outbound
+      destination: "@arizeai/phoenix-mcp"
+      protocol: HTTP
+      # Force all outbound traffic to pass through Model Armor first
+      security_policy: projects/aerocaliper/model_armor_policies/mcp-strict
