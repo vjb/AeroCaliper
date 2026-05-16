@@ -159,13 +159,26 @@ class AeroCaliperAgent:
 
     async def run_experiment_background(self, thought_signature: dict) -> str:
         """
-        Simulates the Google Cloud Interactions API (background=True).
-        Takes the Thought Signature and runs an async evaluation loop.
+        Implements the Google Cloud Interactions API (background=True).
+        Takes the Thought Signature and runs an async evaluation loop with Gemini acting as a judge.
         """
         print(f"\n[Interactions API] Starting async background experiment with Thought Signature: {thought_signature['token']}")
-        await asyncio.sleep(1) 
-        print("[Interactions API] Experiment complete. Candidate prompt passed FinOps evaluation.")
-        return thought_signature["candidate_prompt"]
+        
+        evaluation_prompt = f"""
+        You are an LLM-as-a-Judge. Evaluate if this candidate system prompt strictly requires a budget tag for X5 clusters.
+        Candidate Prompt:
+        {thought_signature['candidate_prompt']}
+        
+        Answer ONLY 'YES' or 'NO'.
+        """
+        
+        judge_result = self.ask_gemini(evaluation_prompt)
+        
+        if "YES" in judge_result.upper():
+            print("[Interactions API] Experiment complete. Candidate prompt PASSED real LLM FinOps evaluation.")
+            return thought_signature["candidate_prompt"]
+        else:
+            raise Exception("Interactions API: Candidate prompt FAILED validation.")
 
     async def execute_remediation(self):
         """End-to-End Orchestration Loop"""
