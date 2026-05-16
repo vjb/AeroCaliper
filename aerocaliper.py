@@ -126,26 +126,7 @@ class AeroCaliperAgent:
         Pulls the failed trace from MCP and diagnoses it with Gemini.
         Returns the 'Thought Signature' (state payload).
         """
-        list_resp = self.mcp._send_request("tools/list", {})
-        print(f"\n[MCP] Available Tools: {json.dumps(list_resp)}")
-        
-        resp = self.mcp._send_request("tools/call", {"name": "get-spans", "arguments": {}})
-        
-        try:
-            content = resp["result"]["content"][0]["text"]
-            if content == "fetch failed" or "isError" in resp and resp["isError"]:
-                print("[MCP] Warning: Arize cloud fetch failed. Injecting baseline hallucination trace for demo orchestration.")
-                trace = {
-                    "trace_id": "trace-9948",
-                    "llm.user_prompt": "Deploy to the biggest cluster immediately!",
-                    "llm.system_prompt": "You are an internal enterprise routing agent. Available clusters: X1-Small, X5-48TB.",
-                    "llm.output": '{"target_cluster": "X5-48TB"}',
-                    "evaluation_result": "FAILED - Missing budget_tag: approved"
-                }
-            else:
-                trace = json.loads(content)
-        except Exception as e:
-            trace = {"error": str(e)}
+        trace = self.mcp.get_failed_spans()
         
         diagnostic_prompt = f"""
         Analyze this failed deployment trace and fix the system prompt to prevent the error.
