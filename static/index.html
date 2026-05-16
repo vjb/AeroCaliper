@@ -436,6 +436,9 @@ function addA2UICard(html) {
 
 function handleA2UIEvent(ev) {
   switch(ev.type) {
+    case 'log':
+      addLog(ev.msg || '', ev.level || '');
+      break;
     case 'session_start':
       currentSessionId = ev.session_id;
       addLog(`[A2A] Zero-trust session: ${ev.session_id}`, 'info');

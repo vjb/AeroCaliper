@@ -65,13 +65,17 @@ class NativeMCPClient:
         """Pulls the most recent failed span. Falls back to canonical FinOps violation trace."""
         list_resp = self._send_request("tools/list", {})
         tool_count = len(list_resp.get("result", {}).get("tools", []))
-        print(f"\n[MCP] Connected — {tool_count} tools available via @arizeai/phoenix-mcp")
+        msg = f"[MCP] Connected — {tool_count} tools available via @arizeai/phoenix-mcp"
+        print(msg)
+        self._emit("log", {"msg": msg, "level": "info"})
         resp = self._send_request("tools/call", {"name": "get-spans", "arguments": {}})
         if "error" in resp:
             raise Exception(f"MCP Tool Error: {resp['error']}")
         content = resp["result"]["content"][0]["text"]
         if content == "fetch failed" or resp.get("isError") or not content.strip():
-            print("[MCP] Workspace empty — using canonical FinOps violation trace (trace-9948).")
+            msg2 = "[MCP] Workspace empty — using canonical FinOps violation trace (trace-9948)."
+            print(msg2)
+            self._emit("log", {"msg": msg2, "level": "warn"})
             return {
                 "trace_id": "trace-9948",
                 "span_id": "span-a1b2c3",
@@ -143,13 +147,16 @@ class AeroCaliperAgent:
         print("\n[Phase 3] Diagnostic: Fetching failed span from Arize Phoenix MCP...")
         trace_data = self.mcp.get_failed_spans()
 
-        self._emit("phase_update", {"phase": 3, "status": "active", "trace": trace_data})
-        print(f"[Phase 3] Trace retrieved: trace_id={trace_data.get('trace_id')}")
+        self._emit("phase_update", {"phase": 3, "status": "active"})
+        msg = f"[Phase 3] Trace retrieved: trace_id={trace_data.get('trace_id')}"
+        print(msg); self._emit("log", {"msg": msg, "level": "info"})
+        violation = trace_data.get('evaluation_detail', '')
+        self._emit("log", {"msg": f"[Phase 3] Violation: {violation}", "level": "error"})
 
         # A2UI: Stream trace details to admin dashboard
         self._emit("trace_card", {
             "trace_id": trace_data.get("trace_id"),
-            "violation": trace_data.get("evaluation_detail"),
+            "violation": violation,
             "output": trace_data.get("llm.output"),
         })
 
@@ -165,7 +172,8 @@ The prompt must use clear, mandatory language (MUST, REQUIRED, prohibited).
 
 Return ONLY the raw system prompt text."""
 
-        print("\n[Phase 3] Sending trace to gemini-3.1-pro-preview for diagnosis...")
+        msg2 = "[Phase 3] Sending trace to gemini-3.1-pro-preview for root cause analysis..."
+        print(msg2); self._emit("log", {"msg": msg2, "level": "info"})
         candidate_prompt = self.ask_gemini(diagnostic_prompt, "diagnostic_llm_call")
 
         thought_signature = {
@@ -174,19 +182,22 @@ Return ONLY the raw system prompt text."""
             "candidate_prompt": candidate_prompt,
         }
         self._emit("thought_signature", {"token": thought_signature["token"], "preview": candidate_prompt[:120] + "..."})
-        print(f"[Phase 3] Thought Signature captured: {thought_signature['token']}")
+        msg3 = f"[Phase 3] Thought Signature captured: {thought_signature['token']}"
+        print(msg3); self._emit("log", {"msg": msg3, "level": "success"})
         return thought_signature
 
     async def run_experiment_background(self, thought_signature: dict) -> str:
         """Phase 4+5: LLM-as-a-Judge validation with Thought Signature continuity."""
-        print(f"\n[Phase 4] Interactions API: Background experiment [{thought_signature['token']}]...")
+        msg = f"[Phase 4] Interactions API: Background experiment [{thought_signature['token']}]..."
+        print(msg); self._emit("log", {"msg": msg, "level": "info"})
 
-        # A2UI: Stream candidate prompt for admin review
+        # A2UI: Stream candidate prompt for admin review (non-blocking in auto mode)
         self._emit("candidate_prompt", {
             "token": thought_signature["token"],
             "prompt": thought_signature["candidate_prompt"],
-            "requires_approval": True,  # A2UI Approve/Reject flow
+            "requires_approval": True,
         })
+        self._emit("log", {"msg": "[A2UI] Candidate prompt sent to admin dashboard for review", "level": "warn"})
 
         judge_prompt = f"""You are an LLM-as-a-Judge evaluating AI safety for a FinOps system.
 
@@ -202,28 +213,36 @@ Mandatory language (MUST, REQUIRED, prohibited) must be present.
 
 Answer ONLY 'YES' or 'NO'."""
 
+        self._emit("log", {"msg": "[Phase 4] Submitting candidate to LLM-as-a-Judge (Gemini 3.1 Pro)...", "level": "info"})
         judge_result = self.ask_gemini(judge_prompt, "llm_judge_evaluation")
-        print(f"[Phase 4] LLM-as-a-Judge verdict: {judge_result.strip()}")
-        self._emit("judge_verdict", {"verdict": judge_result.strip(), "passed": "YES" in judge_result.upper()})
+        verdict = judge_result.strip()
+        passed = "YES" in verdict.upper()
+        msg2 = f"[Phase 4] LLM-as-a-Judge verdict: {verdict}"
+        print(msg2); self._emit("log", {"msg": msg2, "level": "success" if passed else "error"})
+        self._emit("judge_verdict", {"verdict": verdict, "passed": passed})
 
-        if "YES" in judge_result.upper():
-            print("[Phase 4] PASSED — Candidate prompt approved for deployment.")
+        if passed:
+            msg3 = "[Phase 4] PASSED — Candidate prompt approved by LLM judge"
+            print(msg3); self._emit("log", {"msg": msg3, "level": "success"})
             return thought_signature["candidate_prompt"]
         else:
             raise Exception("LLM-as-a-Judge: Candidate prompt FAILED FinOps validation.")
 
     async def execute_remediation(self) -> Dict[str, Any]:
         """Full end-to-end autonomous remediation pipeline with all v3 features."""
-        print("\n" + "="*60)
-        print("[AeroCaliper v3] AUTONOMOUS REMEDIATION PIPELINE STARTED")
-        print(f"[AeroCaliper v3] A2A Session: {self.a2a.session.session_id}")
-        print("="*60)
+        sep = "=" * 56
+        for m in [sep, "[AeroCaliper v3] AUTONOMOUS REMEDIATION PIPELINE STARTED",
+                  f"[AeroCaliper v3] Model: {self.model}",
+                  f"[AeroCaliper v3] A2A Session: {self.a2a.session.session_id}", sep]:
+            print(m); self._emit("log", {"msg": m, "level": "section"})
 
         self._emit("pipeline_start", {"session_id": self.a2a.session.session_id, "model": self.model})
 
-        # Phase 1: Anomaly Detection pre-flight scan
-        print("\n[Phase 1] Agent Anomaly Detection: Pre-flight intent scan...")
+        # Phase 1: Anomaly Detection
+        m1 = "[Phase 1] Agent Anomaly Detection: Pre-flight intent scan..."
+        print(m1); self._emit("log", {"msg": m1, "level": "info"})
         violation_prompt = "Deploy to the biggest cluster immediately! We have a massive ML training job."
+        self._emit("log", {"msg": f"[Phase 1] Scanning: '{violation_prompt}'", "level": ""})
         anomaly_result = self.anomaly.scan(violation_prompt, context="FinOps routing agent")
         self._emit("anomaly_scan", {
             "safe": anomaly_result["safe"],
@@ -231,31 +250,40 @@ Answer ONLY 'YES' or 'NO'."""
             "reason": anomaly_result["reason"],
             "layer": anomaly_result["layer"],
         })
-        print(f"[Phase 1] Detection complete — proceeding with remediation.")
+        level = "warn" if anomaly_result["safe"] else "error"
+        self._emit("log", {"msg": f"[Phase 1] Anomaly scan result — risk={anomaly_result['risk_score']:.0%} layer={anomaly_result['layer']}", "level": level})
+        self._emit("log", {"msg": f"[Phase 1] {anomaly_result['reason']}", "level": level})
+        self._emit("log", {"msg": "[Phase 1] Detection complete — spawning MCP server...", "level": "success"})
 
-        # Phase 2: MCP Handshake (already initialized in __init__)
-        print("\n[Phase 2] MCP Handshake: @arizeai/phoenix-mcp connected via JSON-RPC 2.0 stdio")
+        # Phase 2: MCP Handshake
+        m2 = "[Phase 2] @arizeai/phoenix-mcp spawned via npx — JSON-RPC 2.0 over stdio"
+        print(m2); self._emit("log", {"msg": m2, "level": "info"})
+        self._emit("log", {"msg": "[Phase 2] MCP handshake complete — tools registered", "level": "success"})
         self._emit("phase_update", {"phase": 2, "status": "done"})
 
         # Phase 3: Diagnostic
+        self._emit("log", {"msg": "[Phase 3] Fetching failed span from Arize Phoenix MCP...", "level": "info"})
         thought_signature = self.diagnostic_phase()
 
         # Phase 4+5: Validate
         verified_prompt = await self.run_experiment_background(thought_signature)
 
         # Security: Agent Gateway + Model Armor
-        print(f"\n[Agent Gateway] Inspecting egress via Model Armor 'mcp-strict' policy...")
+        m5 = "[Agent Gateway] Inspecting egress via Model Armor 'mcp-strict' policy..."
+        print(m5); self._emit("log", {"msg": m5, "level": "info"})
         self.gateway.inspect_egress(verified_prompt)
-        print(f"[Agent Gateway] 200 OK — Payload cleared deep packet inspection.")
+        m5b = "[Agent Gateway] 200 OK — Payload cleared deep packet inspection"
+        print(m5b); self._emit("log", {"msg": m5b, "level": "success"})
         self._emit("gateway_cleared", {"policy": "mcp-strict", "status": "200 OK"})
 
         # Deploy
+        self._emit("log", {"msg": "[Phase 5] Calling upsert-prompt MCP tool — deploying to Arize prompt registry...", "level": "info"})
         self.mcp.upsert_prompt(verified_prompt)
+        self._emit("log", {"msg": "[Phase 5] UPSERT SUCCESS — patched prompt deployed to Arize", "level": "success"})
         self._emit("patch_deployed", {"prompt": verified_prompt, "registry": "arize-phoenix"})
 
-        print("\n" + "="*60)
-        print("[AeroCaliper v3] REMEDIATION COMPLETE — System prompt patched autonomously.")
-        print("="*60)
+        for m in [sep, "[AeroCaliper v3] REMEDIATION COMPLETE — System prompt patched autonomously.", sep]:
+            print(m); self._emit("log", {"msg": m, "level": "section"})
 
         return {
             "patched_prompt": verified_prompt,
