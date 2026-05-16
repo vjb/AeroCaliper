@@ -9,6 +9,9 @@
 [![Arize Phoenix MCP](https://img.shields.io/badge/MCP-%40arizeai%2Fphoenix--mcp-cyan)](https://arize.com)
 [![A2A Protocol](https://img.shields.io/badge/A2A-v1.0%20Zero--Trust-violet)](https://google.github.io/A2A)
 
+**🌐 Live Cloud Run Deployment:** [https://aerocaliper-agent-mg7mo672qa-uc.a.run.app](https://aerocaliper-agent-mg7mo672qa-uc.a.run.app)
+*(Note: Requires `x-api-key` header to trigger via webhook)*
+
 ---
 
 ## The Problem
@@ -33,6 +36,12 @@ When a FinOps routing agent hallucinates and deploys a workload to an X5-48TB cl
 6. **Patches** the agent's system prompt via `upsert-prompt` MCP — secured through Agent Gateway + Model Armor  
 
 Zero human intervention. Machine-speed remediation.
+
+---
+
+## Autonomous Remediation Demonstration
+
+![AeroCaliper Autonomous Pipeline Demo](file:///C:/Users/vjbel/.gemini/antigravity/brain/6506b7c7-1ebe-492a-9898-d6e0483a38d8/aerocaliper_demo_1778960439758.webp)
 
 ---
 

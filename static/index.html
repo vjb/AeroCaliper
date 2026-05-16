@@ -547,13 +547,18 @@ async function triggerRemediation() {
 
 async function approveRemediation() {
   if(!currentSessionId) return;
-  document.getElementById('approveBtn').textContent = 'Deploying…';
+  const btn = document.getElementById('approveBtn');
+  btn.textContent = 'Deploying…';
+  btn.disabled = true;
   try {
-    const resp = await fetch(`/remediate/approve/${currentSessionId}`, {method:'POST'});
-    const data = await resp.json();
-    addLog('[A2UI] Patch APPROVED by admin — deployed to Arize prompt registry', 'success');
-    document.getElementById('promptAfter').textContent = data.prompt || '';
-  } catch(e) { addLog('Approve failed: '+e.message,'error'); }
+    await fetch(`/remediate/approve/${currentSessionId}`, {method:'POST'});
+    addLog('[A2UI] Patch APPROVED by admin — resuming pipeline to deploy...', 'success');
+    // The patched prompt arrives via the SSE stream's patch_deployed event — do NOT overwrite here.
+  } catch(e) {
+    addLog('Approve failed: '+e.message,'error');
+    btn.textContent = '✓ Approve & Deploy';
+    btn.disabled = false;
+  }
   document.getElementById('approvalPanel').classList.remove('visible');
 }
 

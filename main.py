@@ -3,9 +3,11 @@ import json
 import asyncio
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Security, Depends
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.security.api_key import APIKeyHeader
+from starlette.status import HTTP_403_FORBIDDEN
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -17,6 +19,17 @@ _sessions: dict = {}
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     yield
+
+API_KEY_NAME = "x-api-key"
+api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
+
+def get_api_key(api_key: str = Security(api_key_header)):
+    expected_key = os.getenv("AEROCALIPER_API_KEY")
+    if expected_key and api_key != expected_key:
+        raise HTTPException(
+            status_code=HTTP_403_FORBIDDEN, detail="Could not validate credentials"
+        )
+    return api_key
 
 
 app = FastAPI(title="AeroCaliper", version="3.1.0", lifespan=lifespan)
@@ -40,7 +53,7 @@ async def health():
 
 
 @app.post("/remediate/stream")
-async def remediate_stream():
+async def remediate_stream(api_key: str = Depends(get_api_key)):
     """
     A2UI SSE Streaming endpoint.
     Emits typed declarative JSON events. Pipeline PAUSES at candidate_prompt
@@ -128,7 +141,7 @@ async def reject_patch(session_id: str):
 
 # Legacy sync endpoint
 @app.post("/remediate")
-async def remediate_legacy():
+async def remediate_legacy(api_key: str = Depends(get_api_key)):
     """Legacy sync endpoint — no approval blocking, runs fully autonomously."""
     import io, sys
     log_buffer = io.StringIO()
