@@ -1,6 +1,10 @@
 import pytest
 import asyncio
+import os
 from agent_gateway import AgentGatewaySimulator
+
+# Force local DPI fallback for tests
+os.environ.pop("MODEL_ARMOR_TEMPLATE", None)
 
 def test_model_armor_blocks_prompt_injection():
     """
