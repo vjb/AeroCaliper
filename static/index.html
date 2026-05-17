@@ -522,7 +522,6 @@ async function triggerRemediation() {
   timerInterval = setInterval(()=>{ document.getElementById('timer').textContent=((Date.now()-startTime)/1000).toFixed(1)+'s'; }, 100);
 
   try {
-    const es = new EventSource('/remediate/stream', {method:'POST'});
     // EventSource doesn't support POST — use fetch with ReadableStream
     const resp = await fetch('/remediate/stream', {method:'POST'});
     document.getElementById('sseStatus').textContent = '● Live';
