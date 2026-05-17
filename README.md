@@ -24,6 +24,18 @@ AeroCaliper is the security layer between your enterprise constraints and your A
 
 ---
 
+## Deep Arize Phoenix MCP Integration
+
+AeroCaliper natively implements the Model Context Protocol (MCP) using the official `modelcontextprotocol.io` Python SDK, acting as an enterprise-grade MCP client. We connect dynamically to the hosted `@arizeai/phoenix-mcp` server using `StdioServerParameters` over JSON-RPC 2.0, utilizing `ARIZE_SPACE_ID` for precise, environment-agnostic workspace targeting.
+
+Specifically, the platform utilizes four native MCP tools to close the autonomous remediation loop:
+1. **`get-projects`**: Profiles the live Arize workspace to verify the target operational environment and ensure trace data is flowing.
+2. **`get-datasets`**: Discovers "golden datasets" deployed on Arize to configure the empirical backtesting engine.
+3. **`get-spans`**: Autonomously retrieves the exact OpenTelemetry execution trace of the hallucinated agent operation. This structured trace serves as the deterministic context for Gemini 3.1 Pro's root-cause analysis.
+4. **`upsert-prompt`**: Upon passing the LLM-as-a-Judge and Google Cloud Model Armor DPI, AeroCaliper executes this tool to push the patched, compliant system prompt directly into the Arize Prompt Registry, healing the target agent instantly.
+
+---
+
 ## Raw Empirical Backtesting
 AeroCaliper isn't just generating prompts—it's mathematically proving they work.
 
