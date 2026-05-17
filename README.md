@@ -27,10 +27,6 @@ AeroCaliper is a closed-loop AI safety mechanism that:
 5. Validates the fix using LLM-as-a-Judge with A2UI streaming to an admin dashboard.
 6. Updates the agent's system prompt via upsert-prompt MCP, secured through the Agent Gateway and Model Armor.
 
-## Autonomous Remediation Demonstration
-
-![AeroCaliper Autonomous Pipeline Demo](assets/demo.webp)
-
 ## Architecture
 
 ```mermaid
