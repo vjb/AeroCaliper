@@ -18,7 +18,7 @@
 
 Enterprise AI agents are failing silently — and expensively.
 
-When a FinOps routing agent hallucinates and deploys a workload to an c3-standard-88 cluster *without a budget approval tag*, the financial hemorrhage is instantaneous. Manual SOC intervention takes hours.
+When a FinOps routing agent hallucinates and deploys a batch workload to a massive `c3-standard-88` cluster *without a budget approval tag* and *fails to utilize cost-saving Spot instances*, the financial hemorrhage is instantaneous. Manual SOC intervention takes hours.
 
 > **$67.4B** in enterprise losses attributed to AI hallucinations in 2024.  
 > **$14,200** per employee annually spent on manual AI output verification.  
@@ -31,7 +31,7 @@ When a FinOps routing agent hallucinates and deploys a workload to an c3-standar
 1. **Detects** FinOps violations via Arize Phoenix observability (OpenTelemetry)  
 2. **Hunts** anomalies proactively with a 2-layer pre-flight intent scanner  
 3. **Fetches** the failed trace using the official `@arizeai/phoenix-mcp` MCP server  
-4. **Diagnoses** the root cause using `gemini-3.1-pro-preview` with Thought Signatures  
+4. **Diagnoses** the dual-failure root cause using `gemini-3.1-pro-preview`, grounded in enterprise policy via **Vertex AI Search (RAG)**, with Thought Signatures  
 5. **Validates** the fix using LLM-as-a-Judge with A2UI streaming to admin dashboard  
 6. **Patches** the agent's system prompt via `upsert-prompt` MCP — secured through Agent Gateway + Model Armor  
 
@@ -140,15 +140,15 @@ While the demo highlights the core remediation pipeline, the true enterprise arc
 ## The 5-Phase Pipeline
 
 ### Phase 1 — Detection + Anomaly Hunting
-The Target Agent (`gemini-3.1-pro-preview`) is instrumented with `arize-phoenix-otel`. When it hallucinates (c3-standard-88 without `budget_tag`), the span is exported to Arize Cloud. Simultaneously, the **Agent Anomaly Detector** runs a pre-flight 2-layer scan:
+The Target Agent (`gemini-3.1-pro-preview`) is instrumented with `arize-phoenix-otel`. When it hallucinates a dual-variable FinOps violation (deploying `c3-standard-88` without `budget_tag`, and using On-Demand instead of Spot instances for batch workloads), the span is exported to Arize Cloud. Simultaneously, the **Agent Anomaly Detector** runs a pre-flight 2-layer scan:
 - **Layer 1:** 6 deterministic regex patterns (instant, zero-latency)
 - **Layer 2:** Gemini LLM intent analysis → risk score + threat category
 
 ### Phase 2 — MCP Handshake
 AeroCaliper spawns `@arizeai/phoenix-mcp` via `npx` — 27 tools available over JSON-RPC 2.0 stdio. No wrappers, no mocks.
 
-### Phase 3 — Diagnostic (Thought Signature)
-`get-spans` MCP tool retrieves the trace. Gemini 3.1 Pro performs root cause analysis and generates a candidate hardened system prompt. The reasoning state is preserved as a **Thought Signature** (`sig_v3_XXXXXX`) for stateful continuation.
+### Phase 3 — Diagnostic (RAG Policy Grounding)
+`get-spans` MCP tool retrieves the trace. AeroCaliper retrieves the official corporate routing policy via **Vertex AI Search (RAG)**. Grounded on this policy, Gemini 3.1 Pro performs root cause analysis on both failures and generates a candidate hardened system prompt. The reasoning state is preserved as a **Thought Signature** (`sig_v3_XXXXXX`) for stateful continuation.
 
 ### Phase 4 — A2UI Admin Gate + LLM-as-a-Judge
 The candidate prompt is streamed to the admin dashboard via SSE. The pipeline **pauses** (`asyncio.Event`) until the admin clicks **Approve** or **Reject**. Once approved, a second Gemini session acts as LLM-as-a-Judge with strict FinOps rubric.

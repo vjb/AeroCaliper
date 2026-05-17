@@ -32,6 +32,10 @@ AeroCaliper is built from the ground up to deeply integrate Google Cloud Platfor
    - For strict security compliance, builds execute using a dedicated, least-privilege user-managed service account (`cloudbuild-runner@aerocaliper.iam.gserviceaccount.com`), overriding the default Google-managed builder.
    - The runner is granted minimal scoped roles: `roles/artifactregistry.writer`, `roles/run.admin`, `roles/storage.admin`, `roles/logging.logWriter`, and `roles/iam.serviceAccountUser`.
 
+8. **Vertex AI Search (RAG)**
+   - AeroCaliper implements Retrieval-Augmented Generation to dynamically fetch enterprise FinOps policies.
+   - When the Target Agent hallucinates (e.g., missing budget tags or failing to use cost-saving Spot instances), Gemini 3.1 Pro is explicitly grounded in the official `Enterprise_FinOps_Routing_Policy_2026.txt` via Vertex AI Search prior to diagnosing the root cause.
+
 ## Arize Phoenix Integration
 
 1. **Trace Exporting (OTLP)**
