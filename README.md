@@ -1,10 +1,14 @@
-# AeroCaliper
-
-AeroCaliper: AI Debugging and Remediation for FinOps
-Google Cloud Rapid Agent Hackathon, Arize Partner Track
-
-Live Cloud Run Deployment: https://aerocaliper-agent-mg7mo672qa-uc.a.run.app
-(Note: Requires x-api-key header to trigger via webhook)
+<div align="center">
+  <h1>⚡ AeroCaliper</h1>
+  <p><b>Autonomous AI Remediation for FinOps Guardrails</b></p>
+  <p><i>Built for the Google Cloud Rapid Agent Hackathon • Arize Partner Track</i></p>
+  
+  <a href="https://aerocaliper-agent-mg7mo672qa-uc.a.run.app">
+    <img src="https://img.shields.io/badge/Live_Deployment-Cloud_Run-3b82f6?style=for-the-badge&logo=googlecloud" alt="Live Cloud Run Deployment" />
+  </a>
+  <br/>
+  <sup>Note: Requires <code>x-api-key</code> header to trigger via webhook.</sup>
+</div>
 
 ## The Problem
 
