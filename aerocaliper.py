@@ -360,20 +360,47 @@ class AeroCaliperAgent:
         try:
             from google.cloud import discoveryengine_v1
             
-            def search_agent_builder_policy(query: str, project_id: str, location: str, data_store_id: str):
+            def search_agent_builder_policy(query: str, project_id: str, location: str, data_store_id: str, engine_id: str = None):
                 client = discoveryengine_v1.SearchServiceClient()
-                serving_config = client.serving_config_path(project_id, location, data_store_id, "default_config")
+                
+                # Use engine-level serving config for Enterprise Edition (extractive answers)
+                # Falls back to datastore-level (Standard) if no engine_id provided
+                if engine_id:
+                    serving_config = f"projects/{project_id}/locations/{location}/collections/default_collection/engines/{engine_id}/servingConfigs/default_config"
+                else:
+                    serving_config = client.serving_config_path(project_id, location, data_store_id, "default_config")
+                
+                # Explicitly request extractive answers and snippets
+                content_search_spec = discoveryengine_v1.SearchRequest.ContentSearchSpec(
+                    extractive_content_spec=discoveryengine_v1.SearchRequest.ContentSearchSpec.ExtractiveContentSpec(
+                        max_extractive_answer_count=1,
+                        max_extractive_segment_count=1,
+                    ),
+                    snippet_spec=discoveryengine_v1.SearchRequest.ContentSearchSpec.SnippetSpec(
+                        return_snippet=True,
+                    ),
+                )
                 
                 request = discoveryengine_v1.SearchRequest(
                     serving_config=serving_config,
                     query=query,
                     page_size=1,
+                    content_search_spec=content_search_spec,
                 )
                 response = client.search(request)
                 snippets = []
                 for result in response.results:
-                    for ext in result.document.derived_struct_data.get("extractive_answers", []):
+                    data = result.document.derived_struct_data
+                    # Priority 1: extractive answers (exact matching clause)
+                    for ext in data.get("extractive_answers", []):
                         snippets.append(ext.get("content", ""))
+                    # Priority 2: snippets (broader context)
+                    if not snippets:
+                        for snip in data.get("snippets", []):
+                            snippets.append(snip.get("snippet", ""))
+                    # Priority 3: document title as last resort
+                    if not snippets and data.get("title"):
+                        snippets.append(f"[Policy: {data.get('title')}]")
                 
                 if snippets:
                     return "\n".join(snippets)
@@ -382,10 +409,11 @@ class AeroCaliperAgent:
             project_id = os.getenv("GOOGLE_CLOUD_PROJECT") or "aerocaliper"
             location = os.getenv("VERTEX_SEARCH_LOCATION", "global")
             datastore_id = os.getenv("VERTEX_DATASTORE_ID_FINOPS", "finops-ds") if self.target_use_case == "finops" else os.getenv("VERTEX_DATASTORE_ID_HR", "hr-ds")
+            engine_id = os.getenv("VERTEX_ENGINE_ID_FINOPS", "finops-app") if self.target_use_case == "finops" else os.getenv("VERTEX_ENGINE_ID_HR", "hr-app")
             
             if project_id and datastore_id:
                 query = "Enterprise FinOps Routing Policy Spot Instances Budget Tag" if self.target_use_case == "finops" else "HR Privacy PII Salary Restrictions"
-                retrieved_policy = search_agent_builder_policy(query, project_id, location, datastore_id)
+                retrieved_policy = search_agent_builder_policy(query, project_id, location, datastore_id, engine_id)
                 if retrieved_policy != "No policy found.":
                     gcp_print("[Phase 3] Policy snippet retrieved successfully from Vertex AI Search Datastore.")
                     policy_preview = retrieved_policy[:150].replace('\n', ' ') + "..."

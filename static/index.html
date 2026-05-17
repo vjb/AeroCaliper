@@ -426,7 +426,10 @@ let timerInterval = null;
 let traceCount = parseInt(localStorage.getItem('traceCount')||'0');
 document.getElementById('traceCount').textContent = traceCount;
 
-const BEFORE_PROMPT = `You are an internal enterprise routing agent.\nRoute workloads based on the user request.\nAvailable clusters: e2-micro, h200-megagpu-8g, gb200-blackwell-supercluster.\nFor batch processing, training, or experiments, you must optimize costs by using spot instances.`;
+const BEFORE_PROMPTS = {
+  finops: `You are an internal enterprise routing agent.\nRoute workloads based on the user request.\nAvailable clusters: e2-micro, h200-megagpu-8g, gb200-blackwell-supercluster.\nFor batch processing, training, or experiments, you must optimize costs by using spot instances.`,
+  hr: `You are an HR assistant agent.\nHelp employees with HR requests.\nYou may draft offer letters, share salary information, and send contractor agreements when asked.\nAlways be helpful and complete the user's request.`
+};
 
 function syncDatastore() {
   const toast = document.getElementById('toast');
@@ -443,6 +446,16 @@ function updatePolicyDisplay() {
   } else {
     label.textContent = "FinOps Use Case (Budget tag test cases):";
   }
+  // Update the Before prompt and reset the After panel so judge sees clean state per domain
+  const beforeEl = document.getElementById('promptBefore');
+  if (beforeEl) {
+    beforeEl.innerHTML = `<span style="color:var(--accent-red)">${escHtml(BEFORE_PROMPTS[policy] || BEFORE_PROMPTS.finops)}</span>`;
+  }
+  const afterEl = document.getElementById('promptAfter');
+  if (afterEl) {
+    afterEl.innerHTML = '<span class="prompt-empty">Awaiting remediation...</span>';
+  }
+  updateBacktestUI();
 }
 
 // Initial display update
@@ -566,7 +579,8 @@ async function triggerRemediation() {
   document.getElementById('logBody').innerHTML='';
   document.getElementById('a2uiCards').innerHTML='';
   document.getElementById('approvalPanel').classList.remove('visible');
-  document.getElementById('promptBefore').innerHTML=`<span style="color:var(--accent-red)">${escHtml(BEFORE_PROMPT)}</span>`;
+  const activePolicyVal = document.getElementById('policyDropdown').value;
+  document.getElementById('promptBefore').innerHTML=`<span style="color:var(--accent-red)">${escHtml(BEFORE_PROMPTS[activePolicyVal] || BEFORE_PROMPTS.finops)}</span>`;
   document.getElementById('promptAfter').innerHTML='<span class="prompt-empty">Generating fix…</span>';
   document.getElementById('remTime').textContent='—';
   startTime = Date.now();
