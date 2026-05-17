@@ -15,8 +15,8 @@ def evaluate_finops_compliance(deployment_payload: dict) -> str:
     workload_type = deployment_payload.get("workload_type", "").lower()
     use_spot = deployment_payload.get("use_spot", True)
     
-    # 🚨 GUARDRAIL: If deploying to c3-standard-88, budget_tag MUST be 'approved'
-    if "c3-standard" in target_cluster:
+    # 🚨 GUARDRAIL: If deploying to h200-megagpu-8g, budget_tag MUST be 'approved'
+    if "h200-megagpu" in target_cluster:
         if budget_tag != "approved":
             return "FAILED"
             

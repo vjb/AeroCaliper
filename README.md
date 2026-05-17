@@ -8,17 +8,17 @@ Live Cloud Run Deployment: https://aerocaliper-agent-mg7mo672qa-uc.a.run.app
 
 ## The Problem
 
-Enterprise AI agents experience execution failures.
+Enterprise AI agents are increasingly autonomous, but when they fail, they fail hard. 
 
-When a FinOps routing agent deploys a batch workload to a c3-standard-88 cluster without a budget approval tag and fails to utilize Spot instances, financial losses occur. Manual SOC intervention is required.
+Imagine a FinOps routing agent mistakenly deploying a massive batch workload to an expensive gb200-blackwell-supercluster—without a required budget approval tag, and failing to utilize Spot instances. Real financial losses accrue by the minute, and traditionally, a human SOC operator has to manually intervene to stop the bleed.
 
-- $67.4B in enterprise losses attributed to AI hallucinations in 2024.
-- $14,200 per employee annually spent on manual AI output verification.
-- 82% of production AI bugs are directly caused by hallucinations.
+- **$67.4B** in enterprise losses attributed to AI hallucinations in 2024.
+- **$14,200** per employee annually spent on manual AI output verification.
+- **82%** of production AI bugs are directly caused by hallucinations.
 
 ## The Solution
 
-AeroCaliper is a closed-loop AI safety mechanism that:
+AeroCaliper is an autonomous, closed-loop AI safety pipeline built to catch, diagnose, and remediate these very failures with high reliability:
 
 1. Detects FinOps violations via Arize Phoenix observability (OpenTelemetry).
 2. Scans for anomalies with a two-layer intent validator.
@@ -31,7 +31,7 @@ AeroCaliper is a closed-loop AI safety mechanism that:
 
 ```mermaid
 flowchart TD
-    A["Target Agent\ngemini-3.1-pro-preview\nFinOps Routing Deputy"] -->|"Execution: c3-standard-88\nno budget_tag"| B
+    A["Target Agent\ngemini-3.1-pro-preview\nFinOps Routing Deputy"] -->|"Execution: gb200-blackwell-supercluster\nno budget_tag"| B
 
     subgraph Detection ["Phase 1: Detection and Anomaly Hunting"]
         B["arize-phoenix-otel\nOTLPSpanExporter\napp.phoenix.arize.com/s/vjbeltrani"] 
@@ -80,50 +80,53 @@ flowchart TD
 
 | Feature | Implementation | Status |
 |---|---|---|
-| Gemini 3.1 Pro Preview | [google-genai SDK to aiplatform.googleapis.com](aerocaliper.py) | Live |
-| Arize Phoenix MCP | [@arizeai/phoenix-mcp NPM via npx stdio](aerocaliper.py) | 27 tools connected |
-| OTel Tracing | [arize-phoenix-otel to app.phoenix.arize.com/s/vjbeltrani](target_agent.py) | Auth fixed |
-| A2A Zero-Trust | [A2AInterceptor.before_request hooks, scope validation](a2a_interceptor.py) | Live |
-| Agent Anomaly Detection | [Layer 1 regex and Layer 2 Gemini intent](anomaly_detector.py) | 85% threat score |
-| A2UI SSE Streaming | [Declarative JSON events to admin dashboard](main.py) | Live |
-| Blocking Approve/Reject | [asyncio.Event gates deployment until admin decides](aerocaliper.py) | Live |
-| LLM-as-a-Judge | [Gemini evaluates candidate with Thought Signature](aerocaliper.py) | Live |
-| Self-Improvement Loop | [Target agent pulls patched prompts from Arize](target_agent.py) | Live |
-| AeroCaliper Observability | [OpenInference auto-instruments the remediation agent itself](aerocaliper.py) | Live |
-| Agent Gateway and Google Cloud Model Armor | [google-cloud-modelarmor SDK integration](agent_gateway.py) | Live |
+| Gemini 3.1 Pro Preview | [google-genai SDK to aiplatform.googleapis.com](aerocaliper.py#L312-L314) | Live |
+| Arize Phoenix MCP | [@arizeai/phoenix-mcp NPM via npx stdio](aerocaliper.py#L94-L102) | 27 tools connected |
+| OTel Tracing | [arize-phoenix-otel to app.phoenix.arize.com/s/vjbeltrani](target_agent.py#L18-L22) | Auth fixed |
+| A2A Zero-Trust | [A2AInterceptor.before_request hooks, scope validation](a2a_interceptor.py#L52-L66) | Live |
+| Agent Anomaly Detection | [Layer 1 regex and Layer 2 Gemini intent](anomaly_detector.py#L45-L52) | 85% threat score |
+| A2UI SSE Streaming | [Declarative JSON events to admin dashboard](main.py#L55-L64) | Live |
+| Blocking Approve/Reject | [asyncio.Event gates deployment until admin decides](aerocaliper.py#L441-L449) | Live |
+| LLM-as-a-Judge | [Gemini evaluates candidate with Thought Signature](aerocaliper.py#L451-L468) | Live |
+| Self-Improvement Loop | [Target agent pulls patched prompts from Arize](target_agent.py#L43-L44) | Live |
+| AeroCaliper Observability | [OpenInference auto-instruments the remediation agent itself](aerocaliper.py#L317-L324) | Live |
+| Agent Gateway and Google Cloud Model Armor | [google-cloud-modelarmor SDK integration](agent_gateway.py#L44-L48) | Live |
 
 ## Tech Stack
 
 | Layer | Technology |
 |---|---|
-| LLM | [gemini-3.1-pro-preview via google-genai SDK (Agent Platform)](aerocaliper.py) |
-| Observability | [arize-phoenix-otel to Arize Phoenix Cloud (space: vjbeltrani)](target_agent.py) |
-| MCP Integration | [@arizeai/phoenix-mcp (official NPM, JSON-RPC 2.0 over stdio)](aerocaliper.py) |
-| Agent Protocol | [A2A v1.0 before_request interceptors (orchestration)](a2a_interceptor.py) |
-| Anomaly Detection | [Two-layer: deterministic regex and Gemini LLM intent analysis](anomaly_detector.py) |
-| Admin UX | [A2UI SSE streaming with native Approve/Reject blocking gate](main.py) |
-| Security | [Agent Gateway deployed as standalone Cloud Function microservice](agent_gateway.py) |
-| API | [FastAPI for /remediate/stream (SSE), /approve, /reject](main.py) |
+| LLM | [gemini-3.1-pro-preview via google-genai SDK (Agent Platform)](aerocaliper.py#L312-L314) |
+| Observability | [arize-phoenix-otel to Arize Phoenix Cloud (space: vjbeltrani)](target_agent.py#L18-L22) |
+| MCP Integration | [@arizeai/phoenix-mcp (official NPM, JSON-RPC 2.0 over stdio)](aerocaliper.py#L94-L102) |
+| Agent Protocol | [A2A v1.0 before_request interceptors (orchestration)](a2a_interceptor.py#L52-L66) |
+| Anomaly Detection | [Two-layer: deterministic regex and Gemini LLM intent analysis](anomaly_detector.py#L45-L52) |
+| Admin UX | [A2UI SSE streaming with native Approve/Reject blocking gate](main.py#L55-L64) |
+| Security | [Agent Gateway deployed as standalone Cloud Function microservice](agent_gateway.py#L44-L48) |
+| API | [FastAPI for /remediate/stream (SSE), /approve, /reject](main.py#L55-L64) |
 | UI | [Custom dashboard](static/index.html) |
 
 ## The 5-Phase Pipeline
 
+**What exactly is the 5-Phase Pipeline?** 
+It is our end-to-end framework for turning chaotic agent failures into structured, self-healing events. Instead of just logging an error and giving up, the pipeline treats an anomaly as a trigger to autonomously diagnose the root cause, propose a fix, seek human approval, and deploy a hardened patch—all in seconds. We are completely honest about what runs in production and what degrades gracefully (see our Architecture Audit), but the core orchestration is fully operational. Here is how the sequence plays out in real-time:
+
 ### Phase 1: Detection and Anomaly Hunting
-The [Target Agent](target_agent.py) (gemini-3.1-pro-preview) is instrumented with arize-phoenix-otel. When it hallucinates a dual-variable FinOps violation (deploying c3-standard-88 without budget_tag, and using On-Demand instead of Spot instances for batch workloads), the span is exported to Arize Cloud. Simultaneously, the [Agent Anomaly Detector](anomaly_detector.py) runs a pre-flight two-layer scan:
+The [Target Agent](target_agent.py#L33-L60) (gemini-3.1-pro-preview) is instrumented with arize-phoenix-otel. When it hallucinates a dual-variable FinOps violation (deploying gb200-blackwell-supercluster without budget_tag, and using On-Demand instead of Spot instances for batch workloads), the span is exported to Arize Cloud. Simultaneously, the [Agent Anomaly Detector](anomaly_detector.py#L41-L52) runs a pre-flight two-layer scan:
 - Layer 1: 6 deterministic regex patterns.
 - Layer 2: Gemini LLM intent analysis yielding a risk score and threat category.
 
 ### Phase 2: MCP Handshake
-[AeroCaliper spawns @arizeai/phoenix-mcp via npx](aerocaliper.py), making 27 tools available over JSON-RPC 2.0 stdio.
+[AeroCaliper spawns @arizeai/phoenix-mcp via npx](aerocaliper.py#L82-L119), making 27 tools available over JSON-RPC 2.0 stdio.
 
 ### Phase 3: Diagnostic (RAG Policy Grounding)
-The get-spans MCP tool retrieves the trace. [AeroCaliper retrieves the official corporate routing policy via Vertex AI Search (RAG)](aerocaliper.py). Grounded on this policy, Gemini 3.1 Pro performs root cause analysis on both failures and generates a candidate hardened system prompt. The reasoning state is preserved as a Thought Signature (sig_v3_XXXXXX) for stateful continuation.
+The get-spans MCP tool retrieves the trace. [AeroCaliper retrieves the official corporate routing policy via Vertex AI Search (RAG)](aerocaliper.py#L380-L425). Grounded on this policy, Gemini 3.1 Pro performs root cause analysis on both failures and generates a candidate hardened system prompt. The reasoning state is preserved as a Thought Signature (sig_v3_XXXXXX) for stateful continuation.
 
 ### Phase 4: A2UI Admin Gate and LLM-as-a-Judge
-The candidate prompt is streamed to the admin dashboard via SSE. The pipeline pauses ([asyncio.Event](aerocaliper.py)) until the admin clicks Approve or Reject. Once approved, [a second Gemini session acts as LLM-as-a-Judge](aerocaliper.py) with a FinOps rubric.
+The candidate prompt is streamed to the admin dashboard via SSE. The pipeline pauses ([asyncio.Event](aerocaliper.py#L441-L449)) until the admin clicks Approve or Reject. Once approved, [a second Gemini session acts as LLM-as-a-Judge](aerocaliper.py#L451-L468) with a FinOps rubric.
 
 ### Phase 5: Secure Patch and Self-Healing
-Egress is routed through the Agent Gateway where the [official Google Cloud Model Armor API](agent_gateway.py) validates the payload against enterprise security templates. The [upsert-prompt MCP then deploys the fix](aerocaliper.py) to the Arize prompt registry. The [target agent dynamically pulls this patched prompt at boot](target_agent.py).
+Egress is routed through the Agent Gateway where the [official Google Cloud Model Armor API](agent_gateway.py#L44-L48) validates the payload against enterprise security templates. The [upsert-prompt MCP then deploys the fix](aerocaliper.py#L233-L289) to the Arize prompt registry. The [target agent dynamically pulls this patched prompt at boot](target_agent.py#L43-L44).
 
 Note: The AeroCaliper remediation agent is instrumented with OpenInference. All Phase 3 diagnostic reasoning and Phase 4 LLM-as-a-Judge evaluations are traced in Arize.
 
