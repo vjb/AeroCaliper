@@ -9,8 +9,9 @@ flowchart TD
     subgraph Execution and Validation
         A[AeroCaliper Initiated] --> B[A2A Interceptor]
         B --> C[Layer 1 and 2 Anomaly Detection]
-        C -->|Risk Score > Threshold| D[Arize Phoenix MCP Server]
-        D -- "get-spans" --> E[Gemini 3.1 Pro Root Cause Analysis]
+        C -->|Risk Score > Threshold| D[Arize Phoenix MCP Server Handshake]
+        D -- "get-projects, get-datasets" --> D2[Phase 2.5 MCP Discovery]
+        D2 -- "get-spans" --> E[Gemini 3.1 Pro Root Cause Analysis]
         E -- "Thought Signature Generated" --> F{A2UI Admin Approval}
         F -- "Approve" --> G[Gemini LLM-as-a-Judge]
     end
@@ -28,6 +29,7 @@ flowchart TD
     
     H:::gcp
     D:::arize
+    D2:::arize
     I:::arize
     J:::arize
     E:::llm
@@ -48,8 +50,9 @@ The system utilizes a two-layer anomaly scanner:
 
 ## 3. MCP Integration
 
-The system utilizes the Arize Phoenix MCP server for data retrieval.
-- The Python MCP client utilizes the official `modelcontextprotocol.io` SDK to query `get-spans` and fetch failed execution traces.
+The system utilizes the Arize Phoenix MCP server for environment discovery and data retrieval.
+- **Phase 2.5 MCP Discovery:** Automatically profiles the workspace by executing `get-projects` and `get-datasets` to locate active project metrics and golden datasets for empirical backtesting.
+- **Trace Fetching:** The Python MCP client utilizes the official `modelcontextprotocol.io` SDK to query `get-spans` and fetch failed execution traces.
 - The trace acts as the deterministic context for the LLM's diagnostic reasoning.
 
 ## 4. Thought Signatures

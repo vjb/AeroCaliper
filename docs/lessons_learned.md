@@ -16,5 +16,6 @@
 2. **Prompt Registry API Changes:** 
    - Older documentation references `arize.experimental.datasets.experiments.prompts`. This is deprecated/incorrect for Phoenix setups. 
    - The modern approach is to initialize `from phoenix.client import Client` and use `client.prompts.get(name="prompt-name")`.
-3. **MCP Integration:**
-   - The `@arizeai/phoenix-mcp` server connects seamlessly, but relies on proper header configuration (`api_key=...` or `Authorization: Bearer`) and the correct `--baseUrl` (especially for workspace-specific routes like `/s/workspace_name`) to authenticate with the cloud instance.
+3. **MCP Integration and Environment Variables:**
+   - The `@arizeai/phoenix-mcp` server connects seamlessly, but relies on proper header configuration (`api_key=...` or `Authorization: Bearer`). 
+   - **Dynamic Space Routing:** Hardcoding the `PHOENIX_SPACE_URL` (e.g., `/s/vjbeltrani`) causes deployment pipelines to fail if the workspace ID changes. Always use an environment variable like `ARIZE_SPACE_ID` to inject the workspace suffix dynamically into the `--baseUrl` argument.

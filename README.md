@@ -17,7 +17,7 @@ AeroCaliper is the security layer between your enterprise constraints and your A
 
 ### How it works:
 1. **Dynamic RAG Governance:** Context-switches between domains (e.g., FinOps vs HR Privacy). When triggered, it queries **Vertex AI Search** to pull the relevant live policy (e.g., from `gs://aerocaliper-rag-bucket`).
-2. **Arize Phoenix MCP:** Uses the official `@arizeai/phoenix-mcp` to fetch failed execution traces directly from the Phoenix Cloud workspace over JSON-RPC.
+2. **Arize Phoenix MCP Server:** Uses the official `@arizeai/phoenix-mcp` to profile the workspace (Phase 2.5) via `get-projects` and `get-datasets`, and fetches failed execution traces directly from the Phoenix Cloud over JSON-RPC. The connection is fully dynamic via the `ARIZE_SPACE_ID` environment variable.
 3. **LLM-as-a-Judge Backtesting:** **Gemini 3.1 Pro** deduces the root cause, generates a candidate patch (Thought Signature), and runs a comprehensive backtest against a golden dataset (`golden_dataset.csv`), scoring the pass rate.
 4. **Model Armor Egress:** Before hitting production, the patched prompt undergoes Deep Packet Inspection (DPI) via **Google Cloud Model Armor** to prevent prompt injections.
 5. **Zero-Trust Fail-Closed:** No mocks. No regex fallbacks. If Vertex AI Search takes 30 minutes to index a new Datastore, the system throws a strict `RuntimeError`. If the MCP handshake fails, the pipeline halts.
@@ -41,8 +41,9 @@ flowchart TD
     subgraph Execution and Validation
         A[AeroCaliper Initiated] --> B[A2A Interceptor]
         B --> C[Layer 1 and 2 Anomaly Detection]
-        C -->|Risk Score > Threshold| D[Arize Phoenix MCP Server]
-        D -- "get-spans" --> E[Gemini 3.1 Pro Root Cause Analysis]
+        C -->|Risk Score > Threshold| D[Arize Phoenix MCP Server Handshake]
+        D -- "get-projects, get-datasets" --> D2[Phase 2.5 MCP Discovery]
+        D2 -- "get-spans" --> E[Gemini 3.1 Pro Root Cause Analysis]
         E -- "Thought Signature Generated" --> F{A2UI Admin Approval}
         F -- "Approve" --> G[Gemini LLM-as-a-Judge]
     end
@@ -60,6 +61,7 @@ flowchart TD
     
     H:::gcp
     D:::arize
+    D2:::arize
     I:::arize
     J:::arize
     E:::llm

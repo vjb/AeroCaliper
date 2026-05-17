@@ -43,12 +43,13 @@ AeroCaliper integrates Google Cloud Platform services with Arize Phoenix observa
    - Root-cause logic and LLM-as-a-Judge evaluations are exported to the Phoenix UI.
 
 2. **Arize MCP Server**
-   - AeroCaliper runs a programmatic execution of @arizeai/phoenix-mcp using the Python SDK, securely authenticating with `--baseUrl` and `--apiKey` arguments targeting the cloud workspace.
-   - The get-spans tool fetches the failed execution context from the observability platform.
+   - AeroCaliper runs a programmatic execution of @arizeai/phoenix-mcp using the Python SDK. It securely authenticates with a dynamically injected `--baseUrl` (via the `ARIZE_SPACE_ID` environment variable) and `--apiKey` targeting the cloud workspace.
+   - During Phase 2.5, it executes `get-projects` and `get-datasets` to profile the environment, before using the `get-spans` tool to fetch the failed execution context.
 
 3. **Autonomous Patching and The Self-Improvement Loop**
-   - Following approval, AeroCaliper uses the upsert-prompt MCP tool to deploy a hardened system prompt directly to the Arize Prompt Registry on the cloud infrastructure.
-   - The Target Agent dynamically pulls this new prompt on reboot via get_prompt().
+   - Following approval, AeroCaliper uses the upsert-prompt MCP tool to deploy a hardened system prompt directly to the Arize Prompt Registry.
+   - The UI reflects this continuous evolution with a live ✨ **Self-Improvement Loop Active** status badge.
+   - The Target Agent dynamically pulls this new prompt on reboot via `get_prompt()`.
 
 4. **Live Evaluations**
    - An LLM-as-a-Judge evaluation pipeline assesses historical traces inside the Phoenix workspace to measure execution accuracy over time across multiple use cases (FinOps, Privacy).

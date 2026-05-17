@@ -14,13 +14,13 @@ The Python asynchronous orchestrator utilizes the `google-genai` SDK and `arize-
 ## Production-Grade Components
 
 1. **Gemini 3.1 Pro:** Every LLM call executes an HTTPS POST to `aiplatform.googleapis.com` via the `google-genai` SDK.
-2. **Arize Phoenix MCP Server:** Spawned via `npx @arizeai/phoenix-mcp` communicating over JSON-RPC 2.0. The `baseUrl` targets the Arize Cloud workspace, bypassing local instances.
+2. **Arize Phoenix MCP Server:** Spawned via `npx @arizeai/phoenix-mcp` communicating over JSON-RPC 2.0. The `baseUrl` dynamically targets the Arize Cloud workspace by parsing the `ARIZE_SPACE_ID` environment variable, ensuring portability across enterprise deployments.
 3. **Vertex AI Search (RAG):** Retrieval-Augmented Generation dynamically fetches enterprise policies (e.g., Cloud FinOps Spot Instance rules or HR PII restrictions) to ground the Gemini diagnostic phase based on the selected governance domain.
 4. **LLM-as-a-Judge Evaluation:** A secondary Gemini 3.1 session independently evaluates the candidate system prompt against a dynamic universal rubric corresponding to the active governance policy.
 5. **A2A Interceptors:** `before_request` hooks wrap all calls to validate scopes and block unauthorized infrastructure deployment.
 6. **Multi-Layer Anomaly Detection:** Deterministic regex scans combined with Gemini intent analysis dynamically calculate risk across multiple domains (FinOps vs. Privacy).
 7. **OTLP Exporting:** `arize-phoenix-otel` and OpenInference seamlessly export spans to the hosted Arize Phoenix Cloud (`app.phoenix.arize.com`).
-8. **Arize Trace Fetching:** The `get-spans` MCP tool retrieves live trace data directly from the populated Arize Phoenix workspace.
+8. **Arize Trace Fetching:** The system executes Phase 2.5 (MCP Environment Discovery) to profile the workspace via `get-projects` and `get-datasets`, then uses the `get-spans` tool to retrieve live trace data directly from the populated Arize Phoenix workspace.
 9. **A2UI Admin Approval Gate:** The backend pipeline uses native `asyncio.Event()` to block and suspend execution until the admin clicks Approve or Reject via the SSE frontend.
 10. **Google Secret Manager and Logging:** API keys are natively mounted, and `google-cloud-logging` streams structured orchestration data to the GCP Logs Explorer.
 11. **Google Cloud Model Armor:** Native SDK validating payloads against enterprise security templates via the `SanitizeUserPrompt` API in the `us-central1` region.
