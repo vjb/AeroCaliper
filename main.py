@@ -53,7 +53,7 @@ async def health():
 
 
 @app.post("/remediate/stream")
-async def remediate_stream(api_key: str = Depends(get_api_key)):
+async def remediate_stream(policy: str = "finops", api_key: str = Depends(get_api_key)):
     """
     A2UI SSE Streaming endpoint.
     Emits typed declarative JSON events. Pipeline PAUSES at candidate_prompt
@@ -73,7 +73,7 @@ async def remediate_stream(api_key: str = Depends(get_api_key)):
     async def run_pipeline():
         try:
             from aerocaliper import AeroCaliperAgent
-            agent = AeroCaliperAgent(event_queue=queue, approval_event=approval_event)
+            agent = AeroCaliperAgent(event_queue=queue, approval_event=approval_event, target_use_case=policy)
             _sessions[session_id]["agent"] = agent
             result = await agent.execute_remediation()
             await queue.put(json.dumps({

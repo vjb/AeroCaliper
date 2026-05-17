@@ -21,7 +21,7 @@ AeroCaliper integrates Google Cloud Platform services with Arize Phoenix observa
    - AeroCaliper implements google-cloud-logging to stream structured logs directly to the GCP Logs Explorer, enabling native alert configurations.
 
 5. **Google Cloud Model Armor and Cloud Functions**
-   - The deep packet inspection mechanism utilizes the google-cloud-modelarmor SDK, validating payloads against enterprise security templates via the SanitizeUserPrompt API.
+   - The deep packet inspection mechanism utilizes the google-cloud-modelarmor SDK, validating payloads against enterprise security templates via the SanitizeUserPrompt API in `us-central1`.
    - This logic is deployed as an external, HTTP-triggered Google Cloud Function (2nd Gen), implementing a distributed microservice architecture.
 
 6. **Gemini CLI Config**
@@ -33,8 +33,8 @@ AeroCaliper integrates Google Cloud Platform services with Arize Phoenix observa
    - The runner is granted minimal scoped roles: roles/artifactregistry.writer, roles/run.admin, roles/storage.admin, roles/logging.logWriter, and roles/iam.serviceAccountUser.
 
 8. **Vertex AI Search (RAG)**
-   - AeroCaliper implements Retrieval-Augmented Generation to fetch enterprise FinOps policies.
-   - When the Target Agent violates constraints (e.g., missing budget tags or failing to use Spot instances), Gemini 3.1 Pro is grounded in the official Enterprise_FinOps_Routing_Policy_2026.txt via Vertex AI Search prior to diagnosing the root cause.
+   - AeroCaliper implements Retrieval-Augmented Generation to dynamically fetch enterprise policies across domains (e.g., Cloud FinOps rules, HR Privacy and PII constraints).
+   - When the Target Agent violates constraints (e.g., missing budget tags or leaking salary bands), Gemini 3.1 Pro is grounded in the official policy documents from the Vertex AI Search Datastore prior to diagnosing the root cause.
 
 ## Arize Phoenix Integration
 
@@ -43,12 +43,12 @@ AeroCaliper integrates Google Cloud Platform services with Arize Phoenix observa
    - Root-cause logic and LLM-as-a-Judge evaluations are exported to the Phoenix UI.
 
 2. **Arize MCP Server**
-   - AeroCaliper runs a programmatic execution of @arizeai/phoenix-mcp using the Python SDK.
+   - AeroCaliper runs a programmatic execution of @arizeai/phoenix-mcp using the Python SDK, securely authenticating with `--baseUrl` and `--apiKey` arguments targeting the cloud workspace.
    - The get-spans tool fetches the failed execution context from the observability platform.
 
 3. **Autonomous Patching and The Self-Improvement Loop**
-   - Following approval, AeroCaliper uses the upsert-prompt MCP tool to deploy a hardened system prompt to the Arize Prompt Registry.
+   - Following approval, AeroCaliper uses the upsert-prompt MCP tool to deploy a hardened system prompt directly to the Arize Prompt Registry on the cloud infrastructure.
    - The Target Agent dynamically pulls this new prompt on reboot via get_prompt().
 
 4. **Live Evaluations**
-   - An LLM-as-a-Judge evaluation pipeline assesses historical traces inside the Phoenix workspace to measure execution accuracy over time.
+   - An LLM-as-a-Judge evaluation pipeline assesses historical traces inside the Phoenix workspace to measure execution accuracy over time across multiple use cases (FinOps, Privacy).

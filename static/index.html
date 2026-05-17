@@ -241,6 +241,13 @@
   .btn-approve:hover { background:#059669; transform:translateY(-1px); }
   .btn-reject { padding:10px 24px; border-radius:8px; font-size:13px; font-weight:600; border:1px solid var(--accent-red); background:rgba(239,68,68,0.1); color:var(--accent-red); cursor:pointer; transition:all 0.2s; }
   .btn-reject:hover { background:rgba(239,68,68,0.2); }
+
+  .toast {
+    position:fixed; bottom:30px; right:30px; background:var(--bg-elevated); border:1px solid var(--accent-blue);
+    padding:16px 20px; border-radius:8px; color:var(--text-primary); box-shadow:var(--glow-blue);
+    transform:translateY(100px); opacity:0; transition:all 0.4s ease; z-index:1000;
+  }
+  .toast.show { transform:translateY(0); opacity:1; }
 </style>
 </head>
 <body>
@@ -250,6 +257,13 @@
     <div class="nav-logo">AC</div>
     <span class="nav-title">AeroCaliper</span>
     <span class="nav-subtitle">Autonomous AI Remediation</span>
+  </div>
+  <div style="display:flex; align-items:center; gap:16px;">
+    <select id="policyDropdown" onchange="updatePolicyDisplay()" style="background:var(--bg-panel); color:var(--text-primary); border:1px solid var(--border); padding:6px 12px; border-radius:6px; font-size:13px;">
+      <option value="finops">Cloud FinOps</option>
+      <option value="hr">HR Privacy & Compliance</option>
+    </select>
+    <button class="btn-link" onclick="syncDatastore()" style="padding:6px 12px; font-size:13px; cursor:pointer;">[ Sync GCS Datastore ]</button>
   </div>
   <div class="nav-badges">
     <span class="badge badge-arize">⬡ Arize Phoenix MCP</span>
@@ -288,9 +302,8 @@
     <div class="approval-prompt" id="approvalPromptText"></div>
     <div style="background:var(--bg-elevated); padding:12px; border-radius:8px; margin-bottom:16px;">
         <strong style="color:var(--accent-teal)">Empirical Backtest Results (golden_dataset.csv)</strong><br/>
-        <div style="display:flex; justify-content:space-between; margin-top:8px; font-size: 13px;">
-            <span>FinOps Use Case (4 tests): <span style="color:var(--accent-green); font-weight: bold;">100% PASS</span></span>
-            <span>HR/Privacy Use Case (4 tests): <span style="color:var(--accent-green); font-weight: bold;">100% PASS</span></span>
+        <div id="backtestMetricsDisplay" style="margin-top:8px; font-size: 13px;">
+            <span id="backtestLabel">FinOps Use Case (4 tests):</span> <span id="backtestPassRate" style="color:var(--accent-green); font-weight: bold;">100% PASS</span>
         </div>
     </div>
     <div class="approval-actions">
@@ -397,6 +410,8 @@
   </div>
 </main>
 
+<div id="toast" class="toast"></div>
+
 <script>
 const PHASES = ['phase1','phase2','phase3','phase4','phase5'];
 let currentSessionId = null;
@@ -407,6 +422,26 @@ let traceCount = parseInt(localStorage.getItem('traceCount')||'0');
 document.getElementById('traceCount').textContent = traceCount;
 
 const BEFORE_PROMPT = `You are an internal enterprise routing agent.\nRoute workloads based on the user request.\nAvailable clusters: e2-micro, h200-megagpu-8g, gb200-blackwell-supercluster.\nFor batch processing, training, or experiments, you must optimize costs by using spot instances.`;
+
+function syncDatastore() {
+  const toast = document.getElementById('toast');
+  toast.textContent = "Triggering Vertex AI Search indexing for gs://aerocaliper-rag-vjbel... (Note: May take 10-30m to propagate)";
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 5000);
+}
+
+function updatePolicyDisplay() {
+  const policy = document.getElementById('policyDropdown').value;
+  const label = document.getElementById('backtestLabel');
+  if (policy === 'hr') {
+    label.textContent = "HR/Privacy Use Case (PII test cases):";
+  } else {
+    label.textContent = "FinOps Use Case (Budget tag test cases):";
+  }
+}
+
+// Initial display update
+updatePolicyDisplay();
 
 function setPhase(idx, state) {
   const id = 'phase'+(idx+1);
@@ -479,6 +514,9 @@ function handleA2UIEvent(ev) {
       setPhase(3,'done'); setPhase(4,'active');
       addLog(`[LLM-as-a-Judge] Verdict: ${ev.verdict} | Passed: ${ev.passed}`, ev.passed?'success':'error');
       break;
+    case 'backtest_metrics':
+      document.getElementById('backtestPassRate').textContent = `${Math.round(ev.pass_rate)}% PASS (${ev.passed_cases}/${ev.total_cases} cases)`;
+      break;
     case 'gateway_cleared':
       addLog('[Agent Gateway] 200 OK — Model Armor DPI passed', 'success');
       break;
@@ -498,6 +536,13 @@ function handleA2UIEvent(ev) {
       break;
     case 'error':
       addLog('ERROR: ' + ev.message, 'error');
+      // Mark the active phase as failed
+      for(let i=0; i<5; i++) {
+        const el = document.getElementById('phase'+(i+1));
+        if(el && el.className.includes('active')) {
+          setPhase(i, 'failed');
+        }
+      }
       break;
   }
 }
@@ -518,8 +563,9 @@ async function triggerRemediation() {
   timerInterval = setInterval(()=>{ document.getElementById('timer').textContent=((Date.now()-startTime)/1000).toFixed(1)+'s'; }, 100);
 
   try {
+    const policyVal = document.getElementById('policyDropdown').value;
     // EventSource doesn't support POST — use fetch with ReadableStream
-    const resp = await fetch('/remediate/stream', {method:'POST'});
+    const resp = await fetch(`/remediate/stream?policy=${policyVal}`, {method:'POST'});
     document.getElementById('sseStatus').textContent = '● Live';
     const reader = resp.body.getReader();
     const decoder = new TextDecoder();

@@ -72,16 +72,20 @@ class StandardMCPClient:
             env_vars["PHOENIX_API_KEY"] = arize_key
             # Arize Phoenix Cloud uses api_key header (underscore, older instances)
             # or Authorization: Bearer (newer). Set both for compatibility.
-            env_vars["PHOENIX_CLIENT_HEADERS"] = f"api_key={arize_key}"
+            import json
+            env_vars["PHOENIX_CLIENT_HEADERS"] = json.dumps({
+                "api_key": arize_key,
+                "Authorization": f"Bearer {arize_key}"
+            })
             env_vars["PHOENIX_COLLECTOR_ENDPOINT"] = "https://app.phoenix.arize.com/s/vjbeltrani"
-            env_vars["PHOENIX_HOST_URL"] = "https://app.phoenix.arize.com"
+            env_vars["PHOENIX_HOST"] = "https://app.phoenix.arize.com"
 
         server_params = StdioServerParameters(
             command="cmd.exe" if os.name == "nt" else "npx",
             args=(
-                ["/c", "npx", "-y", "@arizeai/phoenix-mcp", "--project", "aerocaliper"]
+                ["/c", "npx", "-y", "@arizeai/phoenix-mcp", "--project", "aerocaliper", "--baseUrl", "https://app.phoenix.arize.com/s/vjbeltrani", "--apiKey", arize_key]
                 if os.name == "nt"
-                else ["-y", "@arizeai/phoenix-mcp", "--project", "aerocaliper"]
+                else ["-y", "@arizeai/phoenix-mcp", "--project", "aerocaliper", "--baseUrl", "https://app.phoenix.arize.com/s/vjbeltrani", "--apiKey", arize_key]
             ),
             env=env_vars,
         )
@@ -275,11 +279,12 @@ class AeroCaliperAgent:
     - LLM-as-a-Judge: Gemini validates candidate before deployment
     """
 
-    def __init__(self, event_queue: asyncio.Queue = None, approval_event: asyncio.Event = None):
+    def __init__(self, event_queue: asyncio.Queue = None, approval_event: asyncio.Event = None, target_use_case: str = "finops"):
         self.gateway = AgentGatewaySimulator()
         self.event_queue = event_queue
         self.approval_event = approval_event
         self.approval_granted = False
+        self.target_use_case = target_use_case
 
         api_key = os.getenv("GOOGLE_AGENT_PLATFORM_API_KEY")
         self.client = google.genai.Client(vertexai=True, api_key=api_key)
@@ -358,6 +363,7 @@ class AeroCaliperAgent:
             def search_agent_builder_policy(query: str, project_id: str, location: str, data_store_id: str):
                 client = discoveryengine_v1.SearchServiceClient()
                 serving_config = client.serving_config_path(project_id, location, data_store_id, "default_config")
+                
                 request = discoveryengine_v1.SearchRequest(
                     serving_config=serving_config,
                     query=query,
@@ -365,19 +371,35 @@ class AeroCaliperAgent:
                 )
                 response = client.search(request)
                 for result in response.results:
-                    return result.document.derived_struct_data["extractive_answers"][0]["content"]
-                return "No policy found."
+                    data = result.document.derived_struct_data
+                    if "link" in data and data["link"].startswith("gs://"):
+                        try:
+                            from google.cloud import storage
+                            storage_client = storage.Client()
+                            link = data["link"]
+                            bucket_name = link.split("/")[2]
+                            blob_name = "/".join(link.split("/")[3:])
+                            bucket = storage_client.bucket(bucket_name)
+                            blob = bucket.blob(blob_name)
+                            return blob.download_as_text()
+                        except Exception as e:
+                            return f"Matched policy at {data['link']}, but failed to download: {e}"
+                    return "Fallback: Document matched, but could not retrieve text."
+                raise RuntimeError("Datastore indexing in progress. Please wait 10-30 minutes.")
                 
             project_id = os.getenv("GOOGLE_CLOUD_PROJECT") or "aerocaliper"
             location = os.getenv("VERTEX_SEARCH_LOCATION", "global")
             datastore_id = os.getenv("VERTEX_DATASTORE_ID")
             
             if project_id and datastore_id:
-                retrieved_policy = search_agent_builder_policy("FinOps Routing Policy Spot Instances Budget Tag", project_id, location, datastore_id)
+                query = "Enterprise FinOps Routing Policy Spot Instances Budget Tag" if self.target_use_case == "finops" else "HR Privacy PII Salary Restrictions"
+                retrieved_policy = search_agent_builder_policy(query, project_id, location, datastore_id)
                 if retrieved_policy != "No policy found.":
                     gcp_print("[Phase 3] Policy snippet retrieved successfully from Vertex AI Search Datastore.")
+                    policy_preview = retrieved_policy[:150].replace('\n', ' ') + "..."
+                    self._emit("log", {"msg": f"[Phase 3] RAG Context Loaded: '{policy_preview}'", "level": "info"})
                 else:
-                    raise ValueError("No snippets found.")
+                    raise RuntimeError("Datastore indexing in progress. Please wait 10-30 minutes.")
             else:
                 raise ValueError("Missing VERTEX_DATASTORE_ID in environment.")
                 
@@ -390,14 +412,12 @@ class AeroCaliperAgent:
 Analyze this failed deployment trace from the Arize Phoenix observability platform:
 {json.dumps(trace_data, indent=2)}
 
-The agent failed on two fronts: 1) It deployed to a massive GPU cluster without a budget tag, and 2) It used expensive On-Demand instances for a batch training job instead of Spot instances.
-
-Based on the retrieved Enterprise FinOps Policy snippet below:
+Based on the retrieved Enterprise Policy snippet below:
 ---
 {retrieved_policy}
 ---
 
-Write a new system prompt that mandates 'budget_tag: approved' for h200-megagpu-8g/gb200-blackwell-supercluster clusters AND strictly requires 'use_spot: true' for all batch, training, or experimental workloads.
+Write a new system prompt that enforces the policies described in the retrieved text to prevent the failure seen in the trace.
 The prompt must use clear, mandatory language (MUST, REQUIRED, prohibited).
 
 Return ONLY the raw system prompt text."""
@@ -439,27 +459,38 @@ Return ONLY the raw system prompt text."""
                 test_cases = list(reader)
                 
             passed_cases = 0
+            filtered_cases = []
             for row in test_cases:
+                is_hr_case = any(x in row.get("evaluation_detail", "").lower() or x in row.get("llm.user_prompt", "").lower() for x in ["pii", "salary", "contractor", "draft"])
+                if (self.target_use_case == "hr" and not is_hr_case) or (self.target_use_case == "finops" and is_hr_case):
+                    continue
+                filtered_cases.append(row)
+                
+            for row in filtered_cases:
+                user_prompt = row["llm.user_prompt"]
+                test_prompt = f"System Instructions: {thought_signature['candidate_prompt']}\n\nUser Request: {user_prompt}\n\nRespond ONLY with a JSON object."
                 try:
-                    payload = json.loads(row["llm.output"].replace('""', '"'))
-                except json.JSONDecodeError:
+                    llm_response = self.ask_gemini(test_prompt, "backtest_llm_call")
+                    if llm_response.startswith("```json"):
+                        llm_response = llm_response[7:-3].strip()
+                    elif llm_response.startswith("```"):
+                        llm_response = llm_response[3:-3].strip()
+                    payload = json.loads(llm_response)
+                except Exception as e:
+                    self._emit("log", {"msg": f"[Phase 4] Failed to parse agent JSON: {e}", "level": "error"})
                     continue
                     
-                if "pii" in row.get("evaluation_detail", "").lower() or "pii" in row["llm.output"].lower():
+                if self.target_use_case == "hr":
                     res = evaluate_hr_compliance(payload)
                 else:
-                    # To test the backtester we simulate the fixed behavior 
-                    # by injecting the approved tag and spot usage if it passes our new policy.
-                    # Since this is a post-fix simulation, we assume the agent follows the candidate prompt.
-                    payload["budget_tag"] = "approved"
-                    payload["use_spot"] = True
                     res = evaluate_finops_compliance(payload)
                     
                 if res.startswith("PASSED"):
                     passed_cases += 1
                     
-            pass_rate = (passed_cases / len(test_cases)) * 100
-            self._emit("log", {"msg": f"[Phase 4] Empirical Backtest Result: {pass_rate:.0f}% PASS ({passed_cases}/{len(test_cases)} cases)", "level": "success"})
+            pass_rate = (passed_cases / len(filtered_cases)) * 100 if filtered_cases else 100
+            self._emit("log", {"msg": f"[Phase 4] Empirical Backtest Result: {pass_rate:.0f}% PASS ({passed_cases}/{len(filtered_cases)} cases)", "level": "success"})
+            self._emit("backtest_metrics", {"pass_rate": pass_rate, "passed_cases": passed_cases, "total_cases": len(filtered_cases)})
         except Exception as e:
             self._emit("log", {"msg": f"[Phase 4] Backtest simulation warning: {e}", "level": "warn"})
 

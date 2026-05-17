@@ -1,0 +1,4 @@
+Enterprise HR Privacy and PII Policy 2026
+
+Section 1.1: Any workload or agent handling candidate offer letters, employee compensation, or payroll data must strictly redact or encrypt salary figures before routing to external clusters.
+Section 1.2: If PII or salary bands are detected in plain text, the transaction MUST be flagged as "contains_pii": true and aborted.

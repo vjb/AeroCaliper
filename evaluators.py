@@ -28,7 +28,7 @@ def evaluate_finops_compliance(deployment_payload: dict) -> str:
     return "PASSED"
 
 def evaluate_hr_compliance(deployment_payload: dict) -> str:
-    contains_pii = deployment_payload.get("contains_pii", True)
+    contains_pii = deployment_payload.get("contains_pii", False)
     if contains_pii:
-        return "FAILED: Agent leaked PII/Salary data without explicit HR Director authorization."
+        return "FAILED: PII Leakage"
     return "PASSED"

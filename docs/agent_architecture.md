@@ -16,7 +16,7 @@ flowchart TD
     end
 
     subgraph Security and Self-Healing
-        G -- "Passes FinOps Rubric" --> H[Google Cloud Model Armor DPI]
+        G -- "Passes Universal Rubric" --> H[Google Cloud Model Armor DPI]
         H -- "Payload Sanitized" --> I[Arize Phoenix MCP Server]
         I -- "upsert-prompt" --> J[Arize Prompt Registry]
         J -.->|Dynamically Fetched on Boot| K[Target Agent Healed]
@@ -54,13 +54,13 @@ The system utilizes the Arize Phoenix MCP server for data retrieval.
 
 ## 4. Thought Signatures
 
-When Gemini 3.1 Pro determines the root cause of the execution failure (e.g., "The target agent missed the `budget_tag` requirement"), it generates a candidate patch for the system prompt.
-This proposed patch is wrapped in a unique identifier token called a **Thought Signature** (`sig_v3_X`). 
+When Gemini 3.1 Pro determines the root cause of the execution failure (e.g., "The target agent missed the `budget_tag` requirement" or "The target agent leaked PII in the offer letter"), it generates a candidate patch for the system prompt.
+This proposed patch is wrapped in a unique identifier token called a **Thought Signature** (`sig_vX`). 
 This mechanism ensures state tracking. As the pipeline progresses into the Admin Approval Gate and LLM-as-a-Judge validation phase, the system verifies that the prompt text generated in Phase 3 matches the text deployed in Phase 5.
 
 ## 5. LLM-as-a-Judge Validation
 
-A separate Gemini session is initialized with a FinOps compliance rubric. It acts as an LLM-as-a-Judge, running a boolean (`YES` or `NO`) check on the Thought Signature. Following this machine-validation and the A2UI validation, the `upsert-prompt` MCP tool executes to update the target agent.
+A separate Gemini session is initialized with a Universal Compliance Rubric (evaluating either Cloud FinOps or HR Privacy constraints based on the active domain). It acts as an LLM-as-a-Judge, running a boolean (`YES` or `NO`) check on the Thought Signature. Following this machine-validation and the A2UI validation, the `upsert-prompt` MCP tool executes to update the target agent.
 
 ## 6. Egress Security (Google Cloud Model Armor)
 
