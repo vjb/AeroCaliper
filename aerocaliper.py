@@ -16,7 +16,7 @@ from typing import Dict, Any
 try:
     import google.cloud.logging
     from google.cloud.logging.handlers import CloudLoggingHandler
-    _gcp_logging_client = google.cloud.logging.Client()
+    _gcp_logging_client = google.cloud.logging.Client(project="aerocaliper")
     _gcp_handler = CloudLoggingHandler(_gcp_logging_client)
     logger = logging.getLogger("aerocaliper")
     logger.setLevel(logging.INFO)
