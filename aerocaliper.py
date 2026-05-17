@@ -370,21 +370,13 @@ class AeroCaliperAgent:
                     page_size=1,
                 )
                 response = client.search(request)
+                snippets = []
                 for result in response.results:
-                    data = result.document.derived_struct_data
-                    if "link" in data and data["link"].startswith("gs://"):
-                        try:
-                            from google.cloud import storage
-                            storage_client = storage.Client()
-                            link = data["link"]
-                            bucket_name = link.split("/")[2]
-                            blob_name = "/".join(link.split("/")[3:])
-                            bucket = storage_client.bucket(bucket_name)
-                            blob = bucket.blob(blob_name)
-                            return blob.download_as_text()
-                        except Exception as e:
-                            return f"Matched policy at {data['link']}, but failed to download: {e}"
-                    return "Fallback: Document matched, but could not retrieve text."
+                    for ext in result.document.derived_struct_data.get("extractive_answers", []):
+                        snippets.append(ext.get("content", ""))
+                
+                if snippets:
+                    return "\n".join(snippets)
                 raise RuntimeError("Datastore indexing in progress. Please wait 10-30 minutes.")
                 
             project_id = os.getenv("GOOGLE_CLOUD_PROJECT") or "aerocaliper"

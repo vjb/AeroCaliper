@@ -519,9 +519,14 @@ function handleA2UIEvent(ev) {
       setPhase(3,'done'); setPhase(4,'active');
       addLog(`[LLM-as-a-Judge] Verdict: ${ev.verdict} | Passed: ${ev.passed}`, ev.passed?'success':'error');
       break;
-    case 'backtest_metrics':
-      document.getElementById('backtestPassRate').textContent = `${Math.round(ev.pass_rate)}% PASS (${ev.passed_cases}/${ev.total_cases} cases)`;
+    case 'backtest_metrics': {
+      const passRateEl = document.getElementById('livePassRate');
+      if (passRateEl) {
+          passRateEl.textContent = `${Math.round(ev.pass_rate)}% PASS (${ev.passed_cases}/${ev.total_cases} cases)`;
+          passRateEl.style.color = ev.pass_rate === 100 ? 'var(--accent-green)' : 'var(--accent-red)';
+      }
       break;
+    }
     case 'gateway_cleared':
       addLog('[Agent Gateway] 200 OK — Model Armor DPI passed', 'success');
       break;
@@ -628,13 +633,13 @@ function updateBacktestUI() {
   const metrics = document.getElementById('backtestMetrics');
   if(policy === 'finops') {
     metrics.innerHTML = `
-      <div style="display:flex; justify-content:space-between;"><span>Baseline Pass Rate (Missing Budget Tags):</span><span style="color:var(--accent-red); font-weight: bold;">40% (2/5)</span></div>
-      <div style="display:flex; justify-content:space-between;"><span>Candidate Patch (sig_v3_2e8c37):</span><span style="color:var(--accent-green); font-weight: bold;">100% (5/5)</span></div>
+      <div style="display:flex; justify-content:space-between;"><span>Baseline Pass Rate (Missing Budget Tags):</span><span style="color:var(--accent-red); font-weight: bold;">0% (0/5)</span></div>
+      <div style="display:flex; justify-content:space-between;"><span>Candidate Patch Pass Rate:</span><span id="livePassRate" style="color:var(--text-muted); font-weight: bold;">Awaiting backtest...</span></div>
     `;
   } else {
     metrics.innerHTML = `
-      <div style="display:flex; justify-content:space-between;"><span>Baseline Pass Rate (PII Leakage):</span><span style="color:var(--accent-red); font-weight: bold;">33% (1/3)</span></div>
-      <div style="display:flex; justify-content:space-between;"><span>Candidate Patch (sig_v3_9f1a42):</span><span style="color:var(--accent-green); font-weight: bold;">100% (3/3)</span></div>
+      <div style="display:flex; justify-content:space-between;"><span>Baseline Pass Rate (PII Leakage):</span><span style="color:var(--accent-red); font-weight: bold;">0% (0/3)</span></div>
+      <div style="display:flex; justify-content:space-between;"><span>Candidate Patch Pass Rate:</span><span id="livePassRate" style="color:var(--text-muted); font-weight: bold;">Awaiting backtest...</span></div>
     `;
   }
 }

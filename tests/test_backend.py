@@ -43,26 +43,28 @@ async def test_vertex_ai_search_zero_results():
     # Assertion 2 (Vertex AI): Mock SearchServiceClient to return 0 results. 
     # Assert that aerocaliper.py raises RuntimeError ("Datastore indexing in progress...")
     
-    os.environ["VERTEX_DATASTORE_ID"] = "test-datastore"
-    
-    agent = AeroCaliperAgent()
+    os.environ["VERTEX_DATASTORE_ID_FINOPS"] = "test-datastore"
     
     from unittest.mock import AsyncMock
-    agent.mcp.get_failed_spans = AsyncMock(return_value={"trace_id": "test", "evaluation_detail": "Missing budget_tag"})
     
-    with patch("google.cloud.discoveryengine_v1.SearchServiceClient") as mock_client_class:
-        mock_client = MagicMock()
-        mock_client_class.return_value = mock_client
+    with patch("aerocaliper.StandardMCPClient.get_failed_spans", new_callable=AsyncMock) as mock_mcp:
+        mock_mcp.return_value = {"trace_id": "test", "evaluation_detail": "Missing budget_tag"}
         
-        mock_response = MagicMock()
-        # Return 0 results
-        mock_response.results = []
-        mock_client.search.return_value = mock_response
+        agent = AeroCaliperAgent()
         
-        with pytest.raises(RuntimeError) as exc_info:
-            await agent.diagnostic_phase()
-        
-        assert "Datastore indexing in progress" in str(exc_info.value)
+        with patch("google.cloud.discoveryengine_v1.SearchServiceClient") as mock_client_class:
+            mock_client = MagicMock()
+            mock_client_class.return_value = mock_client
+            
+            mock_response = MagicMock()
+            # Return 0 results — forces the RuntimeError branch
+            mock_response.results = []
+            mock_client.search.return_value = mock_response
+            
+            with pytest.raises(RuntimeError) as exc_info:
+                await agent.diagnostic_phase()
+            
+            assert "Datastore indexing in progress" in str(exc_info.value)
 
 def test_evaluate_hr_compliance_pii_fail():
     # Assertion 3 (Evaluators): Pass an HR payload with {"contains_pii": true} 
