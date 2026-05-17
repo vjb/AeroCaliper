@@ -16,23 +16,19 @@ class AgentGatewaySimulator:
     otherwise falls back to local DPI regex simulation.
     """
     def __init__(self):
-        self.project_id = os.getenv("GOOGLE_CLOUD_PROJECT")
+        self.project_id = os.getenv("GCP_PROJECT_NUMBER", os.getenv("GOOGLE_CLOUD_PROJECT"))
         self.location = os.getenv("MODEL_ARMOR_LOCATION", "us-central1")
         self.template = os.getenv("MODEL_ARMOR_TEMPLATE")
         
         self.use_real_api = MODEL_ARMOR_AVAILABLE and self.project_id and self.template
         
         if self.use_real_api:
-            self.client = modelarmor_v1.ModelArmorClient()
+            from google.api_core.client_options import ClientOptions
+            client_options = ClientOptions(api_endpoint=f"modelarmor.{self.location}.rep.googleapis.com")
+            self.client = modelarmor_v1.ModelArmorClient(client_options=client_options)
             logger.info("[Gateway] Configured to use REAL Google Cloud Model Armor API.")
         else:
-            logger.info("[Gateway] Missing Model Armor config (project/template). Using local regex DPI fallback.")
-            try:
-                with open("infra/model_armor_policy.yaml", "r") as f:
-                    policy = yaml.safe_load(f)
-                    self.rules = policy.get("policy", {}).get("rules", [])
-            except FileNotFoundError:
-                self.rules = []
+            raise RuntimeError("[Gateway] Strict Mode: Missing Model Armor config (project/template) or SDK not available.")
 
     def inspect_egress(self, payload: str):
         """
@@ -53,12 +49,4 @@ class AgentGatewaySimulator:
                 raise PermissionError(f"403 Forbidden: Google Cloud Model Armor strictly blocked this payload.")
             return True
             
-        # Fallback local DPI simulation
-        for rule in self.rules:
-            if rule.get("action") == "BLOCK":
-                patterns = rule.get("match", {}).get("regex", [])
-                for pattern in patterns:
-                    if re.search(pattern, payload):
-                        raise PermissionError(f"403 Forbidden: DPI regex fallback blocked egress payload. Rule trigger: {rule['rule_id']}")
-        
         return True

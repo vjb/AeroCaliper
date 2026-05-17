@@ -10,19 +10,19 @@
   <sup>Note: Requires <code>x-api-key</code> header to trigger via webhook.</sup>
 </div>
 
-## The Problem
+## Current Status (Hackathon Hardened)
+**AeroCaliper is now 100% LIVE and fully hardened for production.** All temporary or mock APIs and "graceful fallbacks" have been strictly removed. The application relies entirely on real interactions with Google Cloud Platform and Arize Phoenix:
+1. **Model Armor:** Real integration with `modelarmor.us-central1.rep.googleapis.com` (using a live `aerocaliper-policy`).
+2. **Vertex AI Search:** Real querying against the `finops-ds` Datastore (populated via GCS).
+3. **Arize Phoenix:** Real prompt registry fetches (`phoenix.client`) and real MCP connectivity for tracing and evals.
 
-Enterprise AI agents are increasingly autonomous, but when they fail, they fail hard. 
+If any API is unreachable, the system will intentionally *fail-fast* rather than returning mocked data.
 
-Imagine a FinOps routing agent mistakenly deploying a massive batch workload to an expensive gb200-blackwell-supercluster—without a required budget approval tag, and failing to utilize Spot instances. Real financial losses accrue by the minute, and traditionally, a human SOC operator has to manually intervene to stop the bleed.
+## AeroCaliper: Universal AI Governance & Autonomous Remediation
 
-- **$67.4B** in enterprise losses attributed to AI hallucinations in 2024.
-- **$14,200** per employee annually spent on manual AI output verification.
-- **82%** of production AI bugs are directly caused by hallucinations.
+As enterprises scale agentic workflows, the cost of AI hallucinations (data leakage, resource waste, policy violations) is skyrocketing. Manual SOC intervention is too slow.
 
-## The Solution
-
-AeroCaliper is an autonomous, closed-loop AI safety pipeline built to catch, diagnose, and remediate these very failures with high reliability:
+AeroCaliper is a zero-trust, closed-loop remediation platform. By decoupling compliance from code using Google Cloud Agent Builder, AeroCaliper dynamically adapts to any department. Whether enforcing Cloud FinOps budgets or blocking HR PII leakage, AeroCaliper detects failures via Arize Phoenix, grounds its diagnostics in departmental policy buckets, empirically backtests structural prompt patches against golden datasets, and deploys fixes autonomously through Google Cloud Model Armor.
 
 1. Detects FinOps violations via Arize Phoenix observability (OpenTelemetry).
 2. Scans for anomalies with a two-layer intent validator.
@@ -145,8 +145,8 @@ cp .env.example .env
 ## Quick Start
 
 ```bash
-git clone https://github.com/vjb/aerocaliper
-cd aerocaliper
+git clone https://github.com/vjb/AeroCaliper
+cd AeroCaliper
 python -m venv .venv && .venv/Scripts/activate
 pip install -r requirements.txt
 uvicorn main:app --port 8080

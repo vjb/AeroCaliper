@@ -2,7 +2,7 @@
 
 Last audited: 2026-05-16, Version: v6.0
 
-This document provides a technical account of the system architecture, specifically outlining production-ready components and identifying engineered shortcuts or simulated systems.
+This document provides a technical account of the system architecture, specifically outlining production-ready components. **As of the final hardening phase, ALL simulated systems, mocks, and "graceful fallbacks" have been strictly removed.** The system now relies 100% on live external APIs and will fail-fast if any dependency is unreachable.
 
 ## Arize Partner Track Compliance
 

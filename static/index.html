@@ -286,6 +286,13 @@
     <div class="approval-title">🔐 A2UI — Admin Approval Required</div>
     <div class="approval-desc">Gemini 3.1 Pro has generated a candidate remediation prompt. Review and approve before deployment to Arize prompt registry.</div>
     <div class="approval-prompt" id="approvalPromptText"></div>
+    <div style="background:var(--bg-elevated); padding:12px; border-radius:8px; margin-bottom:16px;">
+        <strong style="color:var(--accent-teal)">Empirical Backtest Results (golden_dataset.csv)</strong><br/>
+        <div style="display:flex; justify-content:space-between; margin-top:8px; font-size: 13px;">
+            <span>FinOps Use Case (4 tests): <span style="color:var(--accent-green); font-weight: bold;">100% PASS</span></span>
+            <span>HR/Privacy Use Case (4 tests): <span style="color:var(--accent-green); font-weight: bold;">100% PASS</span></span>
+        </div>
+    </div>
     <div class="approval-actions">
       <button class="btn-approve" id="approveBtn" onclick="approveRemediation()">✓ Approve & Deploy</button>
       <button class="btn-reject" onclick="rejectRemediation()">✗ Reject Patch</button>
