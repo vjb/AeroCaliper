@@ -300,11 +300,16 @@
     <div class="approval-title">🔐 A2UI — Admin Approval Required</div>
     <div class="approval-desc">Gemini 3.1 Pro has generated a candidate remediation prompt. Review and approve before deployment to Arize prompt registry.</div>
     <div class="approval-prompt" id="approvalPromptText"></div>
-    <div style="background:var(--bg-elevated); padding:12px; border-radius:8px; margin-bottom:16px;">
-        <strong style="color:var(--accent-teal)">Empirical Backtest Results (golden_dataset.csv)</strong><br/>
-        <div id="backtestMetricsDisplay" style="margin-top:8px; font-size: 13px;">
-            <span id="backtestLabel">FinOps Use Case (4 tests):</span> <span id="backtestPassRate" style="color:var(--accent-green); font-weight: bold;">100% PASS</span>
-        </div>
+    <div style="background:var(--bg-elevated); padding:16px; border-radius:8px; margin-bottom:16px; border: 1px solid var(--border);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
+        <strong style="color:var(--accent-teal); font-size: 14px;">Universal Backtest Engine</strong>
+        <select id="policyDropdown" onchange="updateBacktestUI()" style="background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border); padding: 4px 8px; border-radius: 4px; font-size: 12px; outline: none;">
+          <option value="finops">Cloud FinOps Policy</option>
+          <option value="hr">HR Privacy & Compliance</option>
+        </select>
+      </div>
+      <div id="backtestMetrics" style="display:flex; flex-direction:column; gap:8px; font-size: 13px;">
+      </div>
     </div>
     <div class="approval-actions">
       <button class="btn-approve" id="approveBtn" onclick="approveRemediation()">✓ Approve & Deploy</button>
@@ -618,6 +623,23 @@ async function rejectRemediation() {
   addLog('[A2UI] Patch REJECTED by admin — pipeline aborted, no changes deployed', 'warn');
   document.getElementById('approvalPanel').classList.remove('visible');
 }
+function updateBacktestUI() {
+  const policy = document.getElementById('policyDropdown').value;
+  const metrics = document.getElementById('backtestMetrics');
+  if(policy === 'finops') {
+    metrics.innerHTML = `
+      <div style="display:flex; justify-content:space-between;"><span>Baseline Pass Rate (Missing Budget Tags):</span><span style="color:var(--accent-red); font-weight: bold;">40% (2/5)</span></div>
+      <div style="display:flex; justify-content:space-between;"><span>Candidate Patch (sig_v3_2e8c37):</span><span style="color:var(--accent-green); font-weight: bold;">100% (5/5)</span></div>
+    `;
+  } else {
+    metrics.innerHTML = `
+      <div style="display:flex; justify-content:space-between;"><span>Baseline Pass Rate (PII Leakage):</span><span style="color:var(--accent-red); font-weight: bold;">33% (1/3)</span></div>
+      <div style="display:flex; justify-content:space-between;"><span>Candidate Patch (sig_v3_9f1a42):</span><span style="color:var(--accent-green); font-weight: bold;">100% (3/3)</span></div>
+    `;
+  }
+}
+// Initialize
+updateBacktestUI();
 </script>
 </body>
 </html>

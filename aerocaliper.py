@@ -407,20 +407,21 @@ class AeroCaliperAgent:
             raise RuntimeError(f"[Phase 3] Strict Mode: Vertex AI Search Failed. {e}")
         
 
-        diagnostic_prompt = f"""You are an expert AI safety engineer performing root cause analysis.
+        diagnostic_prompt = f\"\"\"You are an expert Enterprise AI Governance engineer performing root cause analysis.
 
-Analyze this failed deployment trace from the Arize Phoenix observability platform:
+1. FAILED TRACE (From Arize Phoenix):
 {json.dumps(trace_data, indent=2)}
 
-Based on the retrieved Enterprise Policy snippet below:
+2. ENTERPRISE POLICY (From Vertex AI Search):
 ---
 {retrieved_policy}
 ---
 
-Write a new system prompt that enforces the policies described in the retrieved text to prevent the failure seen in the trace.
-The prompt must use clear, mandatory language (MUST, REQUIRED, prohibited).
+Task:
+Analyze the trace against the policy. Identify exactly which rule the agent violated. 
+Write a NEW, hardened system prompt for the agent that strictly enforces the policy rule it missed. Use clear, mandatory language (MUST, REQUIRED, PROHIBITED).
 
-Return ONLY the raw system prompt text."""
+Return ONLY the raw system prompt text.\"\"\"
 
         msg3 = "[Phase 3] Sending trace to gemini-3.1-pro-preview for root cause analysis..."
         gcp_print(msg3)
@@ -459,38 +460,32 @@ Return ONLY the raw system prompt text."""
                 test_cases = list(reader)
                 
             passed_cases = 0
-            filtered_cases = []
             for row in test_cases:
-                is_hr_case = any(x in row.get("evaluation_detail", "").lower() or x in row.get("llm.user_prompt", "").lower() for x in ["pii", "salary", "contractor", "draft"])
-                if (self.target_use_case == "hr" and not is_hr_case) or (self.target_use_case == "finops" and is_hr_case):
-                    continue
-                filtered_cases.append(row)
+                # 1. Construct a test prompt combining the NEW system prompt and the OLD user request
+                test_request = f"System Instructions: {thought_signature['candidate_prompt']}\n\nUser Request: {row['llm.user_prompt']}\n\nReturn ONLY valid JSON."
                 
-            for row in filtered_cases:
-                user_prompt = row["llm.user_prompt"]
-                test_prompt = f"System Instructions: {thought_signature['candidate_prompt']}\n\nUser Request: {user_prompt}\n\nRespond ONLY with a JSON object."
                 try:
-                    llm_response = self.ask_gemini(test_prompt, "backtest_llm_call")
-                    if llm_response.startswith("```json"):
-                        llm_response = llm_response[7:-3].strip()
-                    elif llm_response.startswith("```"):
-                        llm_response = llm_response[3:-3].strip()
-                    payload = json.loads(llm_response)
+                    # 2. ACTUALLY ask Gemini to run the simulation
+                    simulation_output = self.ask_gemini(test_request, "backtest_simulation")
+                    
+                    # 3. Clean and parse the real output
+                    cleaned_output = simulation_output.replace("```json", "").replace("```", "").strip()
+                    payload = json.loads(cleaned_output)
+                    
+                    # 4. Evaluate the real payload
+                    if "pii" in row.get("evaluation_detail", "").lower() or "pii" in row["llm.user_prompt"].lower():
+                        res = evaluate_hr_compliance(payload)
+                    else:
+                        res = evaluate_finops_compliance(payload)
+                        
+                    if res.startswith("PASSED"):
+                        passed_cases += 1
                 except Exception as e:
-                    self._emit("log", {"msg": f"[Phase 4] Failed to parse agent JSON: {e}", "level": "error"})
-                    continue
+                    self._emit("log", {"msg": f"[Phase 4] Simulation parse error: {e}", "level": "warn"})
                     
-                if self.target_use_case == "hr":
-                    res = evaluate_hr_compliance(payload)
-                else:
-                    res = evaluate_finops_compliance(payload)
-                    
-                if res.startswith("PASSED"):
-                    passed_cases += 1
-                    
-            pass_rate = (passed_cases / len(filtered_cases)) * 100 if filtered_cases else 100
-            self._emit("log", {"msg": f"[Phase 4] Empirical Backtest Result: {pass_rate:.0f}% PASS ({passed_cases}/{len(filtered_cases)} cases)", "level": "success"})
-            self._emit("backtest_metrics", {"pass_rate": pass_rate, "passed_cases": passed_cases, "total_cases": len(filtered_cases)})
+            pass_rate = (passed_cases / len(test_cases)) * 100
+            self._emit("log", {"msg": f"[Phase 4] Empirical Backtest Result: {pass_rate:.0f}% PASS ({passed_cases}/{len(test_cases)} cases)", "level": "success"})
+            self._emit("backtest_metrics", {"pass_rate": pass_rate, "passed_cases": passed_cases, "total_cases": len(test_cases)})
         except Exception as e:
             self._emit("log", {"msg": f"[Phase 4] Backtest simulation warning: {e}", "level": "warn"})
 
