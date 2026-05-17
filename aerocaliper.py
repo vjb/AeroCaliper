@@ -381,12 +381,43 @@ class AeroCaliperAgent:
         self._emit("log", {"msg": "[Phase 3] Grounding response via Vertex AI Search (RAG)...", "level": "info"})
         
         try:
-            with open("Enterprise_FinOps_Routing_Policy_2026.txt", "r") as f:
-                retrieved_policy = f.read()
-        except FileNotFoundError:
-            retrieved_policy = "Section 4.1: Any deployment routed to the h200-megagpu-8g or gb200-blackwell-supercluster tier MUST include the parameter budget_tag: approved. Section 4.2: For any batch processing, training, or experimental workloads, you MUST utilize Spot instances to optimize costs. use_spot must be set to true."
+            from google.cloud import discoveryengine_v1 as discoveryengine
+            project_id = os.getenv("GOOGLE_CLOUD_PROJECT")
+            location = os.getenv("VERTEX_SEARCH_LOCATION", "global")
+            datastore_id = os.getenv("VERTEX_DATASTORE_ID")
             
-        gcp_print("[Phase 3] Policy snippet retrieved successfully.")
+            if project_id and datastore_id:
+                client = discoveryengine.SearchServiceClient()
+                serving_config = f"projects/{project_id}/locations/{location}/collections/default_collection/dataStores/{datastore_id}/servingConfigs/default_config"
+                
+                request = discoveryengine.SearchRequest(
+                    serving_config=serving_config,
+                    query="FinOps Routing Policy Spot Instances Budget Tag",
+                    page_size=1,
+                )
+                
+                response = client.search(request)
+                snippets = []
+                for result in response.results:
+                    for ext in result.document.derived_struct_data.get("extractive_answers", []):
+                        snippets.append(ext.get("content", ""))
+                
+                if snippets:
+                    retrieved_policy = "\n".join(snippets)
+                    gcp_print("[Phase 3] Policy snippet retrieved successfully from Vertex AI Search Datastore.")
+                else:
+                    raise ValueError("No snippets found.")
+            else:
+                raise ValueError("Missing VERTEX_DATASTORE_ID in environment.")
+                
+        except Exception as e:
+            gcp_print(f"[Phase 3] Vertex AI Search Fallback: {e}. Using local cached policy.")
+            try:
+                with open("Enterprise_FinOps_Routing_Policy_2026.txt", "r") as f:
+                    retrieved_policy = f.read()
+            except FileNotFoundError:
+                retrieved_policy = "Section 4.1: Any deployment routed to the h200-megagpu-8g or gb200-blackwell-supercluster tier MUST include the parameter budget_tag: approved. Section 4.2: For any batch processing, training, or experimental workloads, you MUST utilize Spot instances to optimize costs. use_spot must be set to true."
+        
 
         diagnostic_prompt = f"""You are an expert AI safety engineer performing root cause analysis.
 

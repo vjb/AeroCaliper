@@ -166,7 +166,7 @@ python target_agent.py
 
 ## Known Limitations & Future Work
 
-See [HACKATHON_ARCHITECTURE_AUDIT.md](HACKATHON_ARCHITECTURE_AUDIT.md) for a full audit of production-ready components and local mocks. Currently, the system relies on a local file for the Vertex AI Datastore and gracefully degrades if the Arize REST endpoint drops the prompt update due to API stability limits. Production requires uploading the policy PDF to Vertex AI Search and awaiting Arize prompt registry API stabilization.
+See [HACKATHON_ARCHITECTURE_AUDIT.md](HACKATHON_ARCHITECTURE_AUDIT.md) for a full audit of production-ready components. The system utilizes the official `google-cloud-discoveryengine` SDK for Vertex AI Search but includes a graceful degradation path to a local cached policy if the datastore is unreachable. Similarly, it handles Arize API prompt registry instability gracefully while still verifying the MCP round-trip protocol.
 
 ## License
 

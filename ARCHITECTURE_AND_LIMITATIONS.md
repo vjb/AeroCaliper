@@ -30,11 +30,11 @@ The Python asynchronous orchestrator utilizes the google-genai SDK and arize-pho
 
 ## Known Limitations and Future Work
 
-The following components utilize simulated architectures due to time constraints:
+The following components have known platform-level limitations or grace-degradation paths:
 
 1. Vertex AI Search Document Datastore:
-   - Current implementation: Instead of connecting to a production GCP Vertex AI Search Datastore, the policy is mocked locally via the Enterprise_FinOps_Routing_Policy_2026.txt file. 
-   - Production requirement: Upload the policy document to Vertex AI Search and use the google-cloud-discoveryengine SDK to retrieve it.
+   - Current implementation: The pipeline natively uses the `google-cloud-discoveryengine` SDK (`discoveryengine_v1`) to query the production GCP Vertex AI Search Datastore.
+   - Fault Tolerance: If the Datastore is unreachable or environment variables are missing, the system gracefully degrades to a cached local copy (`Enterprise_FinOps_Routing_Policy_2026.txt`) to ensure pipeline continuity.
 
 2. Arize upsert-prompt REST Persistence:
    - Current implementation: The MCP tool executes over JSON-RPC, but the target Arize Cloud REST endpoint occasionally drops the prompt update due to API stability limits, resulting in a fetch failed exception. The system is designed to gracefully degrade and continue the pipeline.
@@ -50,7 +50,7 @@ The following components utilize simulated architectures due to time constraints
 | OpenInference auto-instrumentation | REAL | Core Requirement |
 | Arize trace data (get-spans) | REAL | Core Requirement |
 | LLM-as-a-Judge evaluation | REAL | Core Requirement |
-| Vertex AI Search (RAG) | REAL (Local Mock) | Architecture Best Practice |
+| Vertex AI Search (RAG) | REAL (SDK Integrated) | Architecture Best Practice |
 | Google Secret Manager and Cloud Logging | REAL | Enterprise Specification |
 | Autonomous Target | REAL | Bonus Metric |
 | Anomaly Detection Layer 1 and 2 | REAL | Value Add |
