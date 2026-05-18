@@ -3,7 +3,7 @@
 
 AeroCaliper is a zero-trust, closed-loop remediation platform that dynamically patches agentic hallucinations across multiple enterprise departments—all without human SOC intervention.
 
-**Google Cloud Rapid Agent Hackathon Tracks:** Google Agent Platform · AI Observability & Monitoring · Enterprise Security & Compliance
+**Google Cloud Rapid Agent Hackathon Tracks:** Google Agent Platform · AI Observability & Monitoring · **Arize AI Partner Track**
 
 [Watch the E2E Demo Video](AeroCaliper_E2E_Demo_Report.md) · [Architecture](ARCHITECTURE_AND_LIMITATIONS.md) · [Google & Arize Integration](docs/google_and_arize_integration.md)
 
@@ -25,9 +25,15 @@ Traditionally, policies are hardcoded into an agent's prompt, meaning every comp
 
 ---
 
-## Deep Arize Phoenix MCP Integration
+## Deep Arize Phoenix MCP Integration (Arize AI Partner Track)
 
 AeroCaliper natively implements the Model Context Protocol (MCP) using the official `modelcontextprotocol.io` Python SDK, acting as an enterprise-grade MCP client. We connect dynamically to the hosted `@arizeai/phoenix-mcp` server using `StdioServerParameters` over JSON-RPC 2.0, utilizing `ARIZE_SPACE_ID` for precise, environment-agnostic workspace targeting.
+
+**How Phoenix is Configured for the Demo:**
+1. **`/spans` (Tracing):** All Target Agent executions are natively traced via OpenTelemetry. This is where AeroCaliper retrieves failed traces using the `get-spans` MCP tool.
+2. **`/prompts` (Prompt Registry):** The target agent retrieves its initial system prompt (`aerocaliper-finops-routing-agent`) from this registry. Once AeroCaliper completes remediation, the `upsert-prompt` MCP tool overwrites it with the secured version.
+3. **`/datasets` (Golden Datasets):** To perform empirical backtesting, the `aerocaliper-golden-dataset` is hosted here. The `get-datasets` MCP tool discovers it so the pipeline can mathematically prove the new patch against historical edge cases.
+4. **`/evaluators` (LLM-as-a-Judge):** Configured rubrics grade whether the agent's payload remains compliant post-remediation.
 
 Specifically, the platform utilizes four native MCP tools to close the autonomous remediation loop:
 1. **`get-projects`**: Profiles the live Arize workspace to verify the target operational environment and ensure trace data is flowing.
