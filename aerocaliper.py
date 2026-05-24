@@ -116,6 +116,16 @@ class StandardMCPClient:
         if not self.session:
             await self.connect()
 
+        async def log_progress():
+            try:
+                for i in range(1, 20):
+                    await asyncio.sleep(5)
+                    self._emit("log", {"msg": f"[Phase 3] Still querying Arize Phoenix MCP... ({i*5}s elapsed)", "level": "info"})
+            except asyncio.CancelledError:
+                pass
+
+        progress_task = asyncio.create_task(log_progress())
+
         try:
             result = await self.session.call_tool("get-spans", arguments={"project_identifier": "aerocaliper", "limit": 1})
 
@@ -142,6 +152,8 @@ class StandardMCPClient:
 
         except Exception as e:
             return self._canonical_fallback(f"exception: {e}")
+        finally:
+            progress_task.cancel()
 
     def _canonical_fallback(self, reason: str) -> dict:
         raise RuntimeError(f"[MCP] Strict Mode: Trace fetching failed. Reason: {reason}")

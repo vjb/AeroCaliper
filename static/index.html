@@ -89,7 +89,7 @@
   .btn-icon { font-size:18px; }
 
   /* Stats row */
-  .stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:32px; }
+  .stats-row { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:32px; }
   .stat-card {
     background:var(--bg-panel); border:1px solid var(--border); border-radius:12px;
     padding:20px 24px; transition:border-color 0.3s;
@@ -290,11 +290,7 @@
       <div class="stat-value blue" id="traceCount">0</div>
       <div class="stat-sub">Total autonomous patches</div>
     </div>
-    <div class="stat-card">
-      <div class="stat-label">Last Remediation</div>
-      <div class="stat-value teal" id="remTime">&mdash;</div>
-      <div class="stat-sub">Pipeline execution time</div>
-    </div>
+
     <div class="stat-card">
       <div class="stat-label">MCP Tools</div>
       <div class="stat-value green">27</div>
@@ -344,7 +340,6 @@
           <div class="panel-icon icon-blue">⚙</div>
           Remediation Pipeline
         </div>
-        <span id="timer"></span>
       </div>
       <div class="phases" id="phases">
         <div class="phase" id="phase1">
@@ -433,8 +428,6 @@
 const PHASES = ['phase1','phase2','phase3','phase4','phase5'];
 let currentSessionId = null;
 let running = false;
-let startTime = null;
-let timerInterval = null;
 let traceCount = parseInt(localStorage.getItem('traceCount')||'0');
 const _traceEl = document.getElementById('traceCount');
 if (_traceEl) _traceEl.textContent = traceCount;
@@ -566,8 +559,6 @@ function handleA2UIEvent(ev) {
       document.getElementById('approvalPanel').classList.remove('visible');
       traceCount++; localStorage.setItem('traceCount', traceCount);
       document.getElementById('traceCount').textContent = traceCount;
-      const elapsed = ((Date.now()-startTime)/1000).toFixed(1)+'s';
-      document.getElementById('remTime').textContent = elapsed;
       break;
     case 'complete':
       addLog('══════════════════════════════════', 'section');
@@ -599,9 +590,6 @@ async function triggerRemediation() {
   const activePolicyVal = document.getElementById('policyDropdown').value;
   document.getElementById('promptBefore').innerHTML=`<span style="color:var(--accent-red)">${escHtml(BEFORE_PROMPTS[activePolicyVal] || BEFORE_PROMPTS.finops)}</span>`;
   document.getElementById('promptAfter').innerHTML='<span class="prompt-empty">Generating fix…</span>';
-  document.getElementById('remTime').textContent='—';
-  startTime = Date.now();
-  timerInterval = setInterval(()=>{ document.getElementById('timer').textContent=((Date.now()-startTime)/1000).toFixed(1)+'s'; }, 100);
 
   try {
     const policyVal = document.getElementById('policyDropdown').value;
@@ -629,7 +617,6 @@ async function triggerRemediation() {
   } catch(e) {
     addLog('Stream error: ' + e.message, 'error');
   } finally {
-    clearInterval(timerInterval);
     document.getElementById('sseStatus').textContent = '';
     running = false;
     btn.disabled=false; btn.innerHTML='<span class="btn-icon">⚡</span> Trigger Autonomous Remediation';
