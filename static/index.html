@@ -430,6 +430,7 @@
 const PHASES = ['phase1','phase2','phase3','phase4','phase5'];
 let currentSessionId = null;
 let running = false;
+let startTime = 0;
 let traceCount = parseInt(localStorage.getItem('traceCount')||'0');
 const _traceEl = document.getElementById('traceCount');
 if (_traceEl) _traceEl.textContent = traceCount;
@@ -576,6 +577,10 @@ function handleA2UIEvent(ev) {
       document.getElementById('approvalPanel').classList.remove('visible');
       traceCount++; localStorage.setItem('traceCount', traceCount);
       document.getElementById('traceCount').textContent = traceCount;
+      if (startTime) {
+        const elapsed = Math.round((Date.now() - startTime) / 1000);
+        document.getElementById('remTime').textContent = elapsed + 's';
+      }
       break;
     case 'complete':
       addLog('══════════════════════════════════', 'section');
@@ -598,6 +603,7 @@ function handleA2UIEvent(ev) {
 async function triggerRemediation() {
   if(running) return;
   running = true;
+  startTime = Date.now();
   const btn = document.getElementById('triggerBtn');
   btn.disabled=true; btn.innerHTML='<span class="btn-icon">⟳</span> Remediating…';
   resetPhases();
