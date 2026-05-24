@@ -29,11 +29,12 @@ The compliance rules are completely separated from the agent's codebase.
 - Departments (like HR or FinOps) can simply drop their unstructured policy PDFs or text files into these data stores.
 
 **How it works dynamically:**
-When an anomaly is detected, AeroCaliper does not rely on hardcoded rules. Instead, it dynamically queries the corresponding Vertex AI Data Store using **Vertex AI Extractive Answers**. It pulls the exact, live, enterprise policy snippet required for that specific trace and injects it into Gemini 3.1 Pro to diagnose the failure.
+When an anomaly is detected, AeroCaliper does not rely on hardcoded rules. Instead, it dynamically queries the corresponding Vertex AI Data Store using **Vertex AI Extractive Answers**. It pulls the exact, live, enterprise policy snippet required for that specific trace and injects it into Gemini to diagnose the failure.
 
 **The Ultimate Advantage:**
 - **Zero Code Changes:** Legal and HR can update policies in GCP, and the agents instantly adapt without a single line of code changing.
 - **Micro-Targeted RAG:** The agent only receives the exact policy snippet it needs for the specific task at hand, preventing prompt bloat.
+- **Multi-Domain Support:** The `target_use_case` flag (`finops` or `hr`) at runtime context-switches between datastores. The same AeroCaliper engine governs entirely different compliance domains without any code branching.
 
 ---
 
@@ -46,13 +47,15 @@ The `golden_dataset.csv` is a curated collection of historical traces (both succ
 
 When AeroCaliper generates a new "candidate system prompt" to fix a vulnerability, it must prove that the new prompt doesn't cause regressions.
 
-**The Learning Loop:**
-1. **Generate Patch:** Gemini 3.1 Pro generates a new candidate prompt based on the Vertex RAG policy.
-2. **Backtest Simulation:** The agent runs the entire `golden_dataset.csv` through the new candidate prompt in an isolated simulation.
-3. **Pass Rate Calculation:** It verifies that the new prompt blocks the vulnerability *while still successfully completing standard, compliant requests*. 
-4. **LLM-as-a-Judge Evaluation:** The proposed prompt is passed to the Arize Phoenix LLM-as-a-Judge, which uses the original Vertex AI policy to grade whether the prompt is compliant.
+**The Learning Loop (Phase 4 — up to 3 optimization attempts):**
+1. **Generate Patch:** Gemini generates a new candidate prompt based on the Vertex RAG policy extracted in Phase 3.
+2. **Domain Filtering:** The golden dataset is filtered to the active domain (`finops` or `hr`) so FinOps backtests don't accidentally evaluate HR cases (and vice versa).
+3. **Backtest Simulation:** Each filtered case is run through Gemini using the candidate prompt as the system instruction. The output is evaluated by the domain-specific evaluator (`evaluate_finops_compliance` or `evaluate_hr_compliance`).
+4. **Pass Rate Calculation:** It verifies that the new prompt blocks the vulnerability *while still successfully completing standard, compliant requests*.
+5. **Gemini Refinement:** If any cases fail and attempts remain (max 3), the failure context is fed back to Gemini to produce a refined prompt. The loop repeats until 100% pass rate or max attempts are reached.
+6. **LLM-as-a-Judge Evaluation:** The final proposed prompt is graded by a separate Gemini session acting as an LLM-as-a-Judge, using the original Vertex AI policy snippet as the compliance rubric.
 
-By filtering the golden dataset dynamically (e.g., only evaluating FinOps cases for a FinOps violation), the system empirically guarantees that the new behavior is safe before it ever touches the live environment.
+By filtering the golden dataset dynamically and running live Gemini simulations (not mocks), the system empirically guarantees that the new behavior is safe before it ever touches the live environment.
 
 ---
 
@@ -62,6 +65,8 @@ In production security, partial failures are catastrophic.
 
 If the agent successfully diagnoses the issue, writes the patch, and passes the backtest, it must upload the patch to the remote Prompt Registry (Arize Cloud via MCP). 
 
-If the external registry is down (e.g., returns a `500 Internal Server Error`), AeroCaliper does **not** silently swallow the error or fall back to a local mock. It intentionally throws a fatal exception and halts the pipeline. 
+If the external registry is down (e.g., returns a `500 Internal Server Error` or `fetch failed`), AeroCaliper does **not** silently swallow the error or fall back to a local mock. It intentionally throws a fatal `RuntimeError` and halts the pipeline. 
 
 **Why?** We enforce a strict **Fail-Closed paradigm**. It ensures the system never falsely reports a successful patch while leaving a vulnerable agent exposed in production. Security requires deterministic confidence.
+
+The same principle applies to **Vertex AI Search** (if the datastore returns 0 extractive answers, the pipeline throws a `RuntimeError` rather than proceeding with incomplete policy context) and **Google Cloud Model Armor** (if the SDK or GCP credentials are missing, the `AgentGatewaySimulator` raises a `RuntimeError` on initialization rather than silently falling back to local regex).
