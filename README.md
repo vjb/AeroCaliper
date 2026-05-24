@@ -20,6 +20,16 @@ When enterprise AI agents violate FinOps limits, HR privacy rules, or data handl
 4. **Human-in-the-Loop Validation:** Successful patches are presented to administrators via a live Server-Sent Events (SSE) dashboard for final approval.
 5. **Secure Egress:** The approved prompt passes through **Google Cloud Model Armor** for deep packet inspection. Once cleared, it is immediately deployed to the live Arize Prompt Registry via the `@arizeai/phoenix-mcp` server.
 
+```mermaid
+graph LR
+    A[Anomaly Detection] -->|Intercept| B(Diagnostic & Trace Retrieval via MCP)
+    B -->|Vertex AI Policy Search| C{LLM-as-a-Judge Eval}
+    C -->|Simulate Backtest| D[Prompt Self-Healing Loop]
+    D -->|Candidate Prompt| E(A2UI Admin Approval)
+    E -->|Approved| F[Model Armor Inspection]
+    F -->|Secure Egress| G((Arize Prompt Registry))
+```
+
 ---
 
 ## Core Technologies

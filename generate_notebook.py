@@ -135,7 +135,10 @@ nb.cells.append(nbf.v4.new_code_cell("""\
 from phoenix.client import Client
 
 try:
-    client = Client(api_key=PHOENIX_API_KEY)
+    client = Client(
+        base_url=os.getenv("PHOENIX_COLLECTOR_ENDPOINT", "https://app.phoenix.arize.com").replace("/v1/traces", ""),
+        api_key=PHOENIX_API_KEY
+    )
     prompt = client.prompts.get(prompt_identifier="aerocaliperfinopsroutingagent")
     print("Successfully retrieved live prompt from Arize Registry!")
     print("\\n--- Deployed System Prompt ---")

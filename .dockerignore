@@ -1,0 +1,11 @@
+.venv
+.git
+.pytest_cache
+__pycache__
+archive
+notebooks
+infra
+policies
+cloud_function
+.env
+.vscode
