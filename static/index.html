@@ -89,7 +89,7 @@
   .btn-icon { font-size:18px; }
 
   /* Stats row */
-  .stats-row { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:32px; }
+  .stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:32px; }
   .stat-card {
     background:var(--bg-panel); border:1px solid var(--border); border-radius:12px;
     padding:20px 24px; transition:border-color 0.3s;
@@ -289,6 +289,11 @@
       <div class="stat-label">Remediations</div>
       <div class="stat-value blue" id="traceCount">0</div>
       <div class="stat-sub">Total autonomous patches</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Avg Rem. Time</div>
+      <div class="stat-value teal" id="remTime">0s</div>
+      <div class="stat-sub">Time to autonomous heal</div>
     </div>
 
     <div class="stat-card">
