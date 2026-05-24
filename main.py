@@ -32,7 +32,7 @@ def get_api_key(api_key: str = Security(api_key_header)):
     return api_key
 
 
-app = FastAPI(title="AeroCaliper", version="3.1.0", lifespan=lifespan)
+app = FastAPI(title="AeroCaliper", version="4.0.0", lifespan=lifespan)
 
 if os.path.exists("static"):
     app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -46,7 +46,7 @@ async def root():
 @app.get("/health")
 async def health():
     return {
-        "status": "ok", "version": "3.1.0",
+        "status": "ok", "version": "4.0.0",
         "model": "gemini-3.1-pro-preview",
         "features": ["a2a-interceptors", "anomaly-detection", "a2ui-streaming", "blocking-approval"],
     }

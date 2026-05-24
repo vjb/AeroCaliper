@@ -311,10 +311,7 @@
     <div style="background:var(--bg-elevated); padding:16px; border-radius:8px; margin-bottom:16px; border: 1px solid var(--border);">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
         <strong id="backtestLabel" style="color:var(--accent-teal); font-size: 14px;">Universal Backtest Engine</strong>
-        <select id="backtestPolicyDropdown" onchange="updateBacktestUI()" style="background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border); padding: 4px 8px; border-radius: 4px; font-size: 12px; outline: none;">
-          <option value="finops">Cloud FinOps Policy</option>
-          <option value="hr">HR Privacy & Compliance</option>
-        </select>
+        <span id="backtestPolicyLabel" style="color:var(--text-secondary); font-size: 12px;">Cloud FinOps Policy</span>
       </div>
       <div id="backtestMetrics" style="display:flex; flex-direction:column; gap:8px; font-size: 13px;">
       </div>
@@ -346,7 +343,7 @@
           <div class="phase-icon">🎯</div>
           <div class="phase-info">
             <div class="phase-name">Phase 1 — Detection</div>
-            <div class="phase-desc">Target agent hallucinates gb200-blackwell-supercluster deployment · arize-phoenix-otel traces sent to Arize Cloud</div>
+            <div class="phase-desc" id="phase1Desc">Target agent triggers policy violation · arize-phoenix-otel traces sent to Arize Cloud</div>
           </div>
           <span class="phase-status status-idle">Idle</span>
         </div>
@@ -454,9 +451,17 @@ function updatePolicyDisplay() {
       label.textContent = "FinOps Use Case (Budget tag test cases):";
     }
   }
-  const backtestDropdown = document.getElementById('backtestPolicyDropdown');
-  if (backtestDropdown) {
-    backtestDropdown.value = policy;
+  // Sync the static backtest policy label (replaces the old dropdown)
+  const backtestPolicyLabel = document.getElementById('backtestPolicyLabel');
+  if (backtestPolicyLabel) {
+    backtestPolicyLabel.textContent = policy === 'hr' ? 'HR Privacy & Compliance' : 'Cloud FinOps Policy';
+  }
+  // Update Phase 1 description to match the active domain
+  const phase1Desc = document.getElementById('phase1Desc');
+  if (phase1Desc) {
+    phase1Desc.textContent = policy === 'hr'
+      ? 'Target HR agent leaks PII/salary data · arize-phoenix-otel traces sent to Arize Cloud'
+      : 'Target FinOps agent hallucinates gb200-blackwell-supercluster deployment · arize-phoenix-otel traces sent to Arize Cloud';
   }
   // Update the Before prompt and reset the After panel so judge sees clean state per domain
   const beforeEl = document.getElementById('promptBefore');
@@ -651,7 +656,8 @@ async function rejectRemediation() {
   document.getElementById('approvalPanel').classList.remove('visible');
 }
 function updateBacktestUI() {
-  const policy = document.getElementById('backtestPolicyDropdown').value;
+  const policy = document.getElementById('policyDropdown') ?
+    document.getElementById('policyDropdown').value : 'finops';
   const metrics = document.getElementById('backtestMetrics');
   if(policy === 'finops') {
     metrics.innerHTML = `

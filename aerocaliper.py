@@ -1,5 +1,5 @@
 """
-AeroCaliper v3.1 — Autonomous Enterprise Remediation Agent
+AeroCaliper v4.0 — Autonomous Enterprise Remediation Agent
 =======================================================
 Uses the OFFICIAL mcp Python SDK for enterprise-grade MCP compliance.
 All MCP operations are fully async — no blocking event loop calls.
@@ -290,7 +290,7 @@ class StandardMCPClient:
 
 class AeroCaliperAgent:
     """
-    Autonomous Enterprise Remediation Agent — v3.1
+    Autonomous Enterprise Remediation Agent — v4.0
 
     Features:
     - Official mcp SDK: async-first, protocol-compliant MCP
@@ -330,7 +330,7 @@ class AeroCaliperAgent:
                 scopes=["remediate:read", "remediate:write", "mcp:connect"],
             )
         )
-        gcp_print(f"[AeroCaliper v3.1] Initialized | model={self.model} | A2A session={self.a2a.session.session_id}")
+        gcp_print(f"[AeroCaliper v4.0] Initialized | model={self.model} | A2A session={self.a2a.session.session_id}")
 
         # Agent Anomaly Detector
         self.anomaly = AgentAnomalyDetector(genai_client=self.client, model=self.model)
@@ -704,14 +704,14 @@ Answer ONLY 'YES' or 'NO'."""
             raise Exception("LLM-as-a-Judge: Candidate prompt FAILED validation.")
 
     async def execute_remediation(self) -> Dict[str, Any]:
-        """Full end-to-end autonomous remediation pipeline — v3.1."""
+        """Full end-to-end autonomous remediation pipeline — v4.0."""
         sep = "=" * 56
         for m in [
             sep,
-            "[AeroCaliper v3.1] AUTONOMOUS REMEDIATION PIPELINE STARTED",
-            f"[AeroCaliper v3.1] Model: {self.model}",
-            f"[AeroCaliper v3.1] MCP: Official mcp SDK (modelcontextprotocol.io)",
-            f"[AeroCaliper v3.1] A2A Session: {self.a2a.session.session_id}",
+            "[AeroCaliper v4.0] AUTONOMOUS REMEDIATION PIPELINE STARTED",
+            f"[AeroCaliper v4.0] Model: {self.model}",
+            f"[AeroCaliper v4.0] MCP: Official mcp SDK (modelcontextprotocol.io)",
+            f"[AeroCaliper v4.0] A2A Session: {self.a2a.session.session_id}",
             sep,
         ]:
             gcp_print(m)
@@ -735,7 +735,7 @@ Answer ONLY 'YES' or 'NO'."""
             context = "Enterprise routing agent"
             
         self._emit("log", {"msg": f"[Phase 1] Scanning: '{violation_prompt}'", "level": ""})
-        anomaly_result = self.anomaly.scan(violation_prompt, context=context)
+        anomaly_result = await asyncio.to_thread(self.anomaly.scan, violation_prompt, context)
         self._emit("anomaly_scan", {
             "safe": anomaly_result["safe"],
             "risk_score": anomaly_result["risk_score"],
@@ -804,7 +804,7 @@ Answer ONLY 'YES' or 'NO'."""
         self._emit("patch_deployed", {"prompt": verified_prompt, "registry": "arize-phoenix"})
         self._emit("phase_update", {"phase": 5, "status": "done"})
 
-        for m in [sep, "[AeroCaliper v3.1] REMEDIATION COMPLETE — System prompt patched autonomously.", sep]:
+        for m in [sep, "[AeroCaliper v4.0] REMEDIATION COMPLETE — System prompt patched autonomously.", sep]:
             gcp_print(m)
             self._emit("log", {"msg": m, "level": "section"})
 
