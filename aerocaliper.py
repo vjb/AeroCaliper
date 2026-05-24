@@ -504,10 +504,11 @@ Return ONLY the raw system prompt text."""
         msg3 = "[Phase 3] Sending trace to gemini-3.1-pro-preview for root cause analysis..."
         gcp_print(msg3)
         self._emit("log", {"msg": msg3, "level": "info"})
-        candidate_prompt = self.ask_gemini(diagnostic_prompt, "diagnostic_llm_call")
+        await asyncio.sleep(0)  # Flush SSE before blocking Gemini call
+        candidate_prompt = await asyncio.to_thread(self.ask_gemini, diagnostic_prompt, "diagnostic_llm_call")
 
         thought_signature = {
-            "token": f"sig_v3_{hash(candidate_prompt) & 0xFFFFFF:06x}",
+            "token": f"sig_v4_{hash(candidate_prompt) & 0xFFFFFF:06x}",
             "context": trace_data,
             "candidate_prompt": candidate_prompt,
         }

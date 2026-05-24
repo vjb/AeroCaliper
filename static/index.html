@@ -639,8 +639,7 @@ async function approveRemediation() {
   btn.disabled = true;
   try {
     await fetch(`/remediate/approve/${currentSessionId}`, {method:'POST'});
-    addLog('[A2UI] Patch APPROVED by admin — resuming pipeline to deploy...', 'success');
-    // The patched prompt arrives via the SSE stream's patch_deployed event — do NOT overwrite here.
+    // Backend emits the approval confirmation via SSE — no need to duplicate here.
   } catch(e) {
     addLog('Approve failed: '+e.message,'error');
     btn.textContent = '✓ Approve & Deploy';
