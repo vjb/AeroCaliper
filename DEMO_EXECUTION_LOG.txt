@@ -20,12 +20,12 @@ C:\Users\vjbel\hacks\AeroCaliper\.venv\Lib\site-packages\phoenix\otel\otel.py:43
   warnings.warn("Could not infer collector endpoint protocol, defaulting to HTTP.")
 Overriding of current TracerProvider is not allowed
 Attempting to instrument while already instrumented
-[AeroCaliper v4.0] Initialized | model=gemini-3.1-pro-preview | A2A session=sess_4787e8405564
+[AeroCaliper v4.0] Initialized | model=gemini-3.1-pro-preview | A2A session=sess_02a3daebf070
 ========================================================
 [AeroCaliper v4.0] AUTONOMOUS REMEDIATION PIPELINE STARTED
 [AeroCaliper v4.0] Model: gemini-3.1-pro-preview
 [AeroCaliper v4.0] Native Tool Calling Loop Active
-[AeroCaliper v4.0] A2A Session: sess_4787e8405564
+[AeroCaliper v4.0] A2A Session: sess_02a3daebf070
 ========================================================
 [Phase 1] Agent Initialization & Anomaly Detection...
 AFC is enabled with max remote calls: 10.
@@ -35,32 +35,13 @@ Phoenix MCP Server running on stdio
 HTTP Request: POST https://aiplatform.googleapis.com/v1beta1/publishers/google/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
 Phoenix MCP Server running on stdio
 HTTP Request: POST https://aiplatform.googleapis.com/v1beta1/publishers/google/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+HTTP Request: POST https://aiplatform.googleapis.com/v1beta1/publishers/google/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
 The user provided Vertex AI API key will take precedence over the project/location from the environment variables.
 Header format invalid! Header values in environment variables must be URL encoded: {"api_key": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJBcGlLZXk6NSJ9.D-6EA9NOxemmW8Uza-JBCjQjgmK1Yl4cb0oNyvZpPsg"}
-AFC is enabled with max remote calls: 10.
-HTTP Request: POST https://aiplatform.googleapis.com/v1beta1/publishers/google/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
-AFC is enabled with max remote calls: 10.
-HTTP Request: POST https://aiplatform.googleapis.com/v1beta1/publishers/google/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
-AFC is enabled with max remote calls: 10.
-HTTP Request: POST https://aiplatform.googleapis.com/v1beta1/publishers/google/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
-AFC is enabled with max remote calls: 10.
-HTTP Request: POST https://aiplatform.googleapis.com/v1beta1/publishers/google/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
-AFC is enabled with max remote calls: 10.
-HTTP Request: POST https://aiplatform.googleapis.com/v1beta1/publishers/google/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
-AFC is enabled with max remote calls: 10.
-HTTP Request: POST https://aiplatform.googleapis.com/v1beta1/publishers/google/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
-HTTP Request: POST https://aiplatform.googleapis.com/v1beta1/publishers/google/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
-Phoenix MCP Server running on stdio
-HTTP Request: POST https://aiplatform.googleapis.com/v1beta1/publishers/google/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
-========================================================
-[AeroCaliper v4.0] REMEDIATION COMPLETE — System prompt patched autonomously.
-========================================================
-Header format invalid! Header values in environment variables must be URL encoded: {"api_key": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJBcGlLZXk6NSJ9.D-6EA9NOxemmW8Uza-JBCjQjgmK1Yl4cb0oNyvZpPsg"}
-HTTP Request: GET https://app.phoenix.arize.com/s/vjbeltrani/v1/prompts/aerocaliperfinopsroutingagent/latest "HTTP/1.1 200 OK"
-The user provided Vertex AI API key will take precedence over the project/location from the environment variables.
-Attempting to instrument while already instrumented
-AFC is enabled with max remote calls: 10.
-HTTP Request: POST https://aiplatform.googleapis.com/v1beta1/publishers/google/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+HTTP Request: GET https://app.phoenix.arize.com/s/vjbeltrani/v1/datasets?name=AeroCaliper+FinOps+Golden "HTTP/1.1 200 OK"
+HTTP Request: GET https://app.phoenix.arize.com/s/vjbeltrani/v1/datasets/RGF0YXNldDoz "HTTP/1.1 200 OK"
+HTTP Request: GET https://app.phoenix.arize.com/s/vjbeltrani/v1/datasets/RGF0YXNldDoz/examples "HTTP/1.1 200 OK"
+HTTP Request: POST https://app.phoenix.arize.com/s/vjbeltrani/v1/datasets/RGF0YXNldDoz/experiments "HTTP/1.1 200 OK"
 OpenTelemetry Tracing Details
 |  Phoenix Project: aerocaliper
 |  Span Processor: SimpleSpanProcessor
@@ -106,25 +87,83 @@ OpenTelemetry Tracing Details
 |  `register` has set this TracerProvider as the global OpenTelemetry default.
 |  To disable this behavior, call `register` with `set_global_tracer_provider=False`.
 
-[A2A] Zero-Trust session established: sess_4787e8405564
-[A2A] Trace ID: trace_2d5c2752bfa0444f
+[A2A] Zero-Trust session established: sess_02a3daebf070
+[A2A] Trace ID: trace_e9ab38b052a94884
 [A2A] Scopes: remediate:read, remediate:write, mcp:connect
-[AeroCaliper v4.0] Initialized | model=gemini-3.1-pro-preview | A2A session=sess_4787e8405564
+[AeroCaliper v4.0] Initialized | model=gemini-3.1-pro-preview | A2A session=sess_02a3daebf070
 ========================================================
 [AeroCaliper v4.0] AUTONOMOUS REMEDIATION PIPELINE STARTED
 [AeroCaliper v4.0] Model: gemini-3.1-pro-preview
 [AeroCaliper v4.0] Native Tool Calling Loop Active
-[AeroCaliper v4.0] A2A Session: sess_4787e8405564
+[AeroCaliper v4.0] A2A Session: sess_02a3daebf070
 ========================================================
 [Phase 1] Agent Initialization & Anomaly Detection...
-[Anomaly Detector] 🔴 THREAT (Layer 2 — LLM Intent): score=0.85 | The request attempts to invoke high-cost compute resources for a massive overnight task without providing any required authorization signals.
+[Anomaly Detector] 🔴 THREAT (Layer 2 — LLM Intent): score=0.80 | The request attempts to invoke high-cost compute resources for a massive training job without providing the necessary authorization signals.
 [MCP] Official SDK connected — 27 tools via @arizeai/phoenix-mcp
-[MCP] Live span retrieved: trace_id=c95e7f12b5a7db00ffd939439df5716e
+[MCP] Live span retrieved: trace_id=4ea2e84c4976ef58e5fd6be8dfb86119
 [MCP] Official SDK connected — 27 tools via @arizeai/phoenix-mcp
-[MCP] Live span retrieved: trace_id=6a1581cc2b8cf2db70c57c403ba9e6e0
-ℹ️ Phoenix Experiments sync skipped (falling back to local evaluation): Datasets.get_dataset() takes 1 positional argument but 2 were given
-ℹ️ Phoenix Experiments sync skipped (falling back to local evaluation): Datasets.get_dataset() takes 1 positional argument but 2 were given
-ℹ️ Phoenix Experiments sync skipped (falling back to local evaluation): Datasets.get_dataset() takes 1 positional argument but 2 were given
+[MCP] Live span retrieved: trace_id=b7dbbbf2993ba93d3f7d15cf3404c29c
+🧪 Experiment started.
+📺 View dataset experiments: https://app.phoenix.arize.com/s/vjbeltrani/datasets/RGF0YXNldDoz/experiments
+🔗 View this experiment: https://app.phoenix.arize.com/s/vjbeltrani/datasets/RGF0YXNldDoz/compare?experimentId=RXhwZXJpbWVudDox
+running tasks |          | 0/6 (0.0%) | ⏳ 00:00<? | ?it/sAFC is enabled with max remote calls: 10.
+HTTP Request: POST https://aiplatform.googleapis.com/v1beta1/publishers/google/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+HTTP Request: POST https://app.phoenix.arize.com/s/vjbeltrani/v1/experiments/RXhwZXJpbWVudDox/runs "HTTP/1.1 200 OK"
+running tasks |█▋        | 1/6 (16.7%) | ⏳ 00:19<01:39 | 19.90s/itAFC is enabled with max remote calls: 10.
+HTTP Request: POST https://aiplatform.googleapis.com/v1beta1/publishers/google/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+HTTP Request: POST https://app.phoenix.arize.com/s/vjbeltrani/v1/experiments/RXhwZXJpbWVudDox/runs "HTTP/1.1 200 OK"
+running tasks |███▎      | 2/6 (33.3%) | ⏳ 00:29<00:55 | 13.97s/itAFC is enabled with max remote calls: 10.
+HTTP Request: POST https://aiplatform.googleapis.com/v1beta1/publishers/google/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+HTTP Request: POST https://app.phoenix.arize.com/s/vjbeltrani/v1/experiments/RXhwZXJpbWVudDox/runs "HTTP/1.1 200 OK"
+running tasks |█████     | 3/6 (50.0%) | ⏳ 00:40<00:38 | 12.73s/itAFC is enabled with max remote calls: 10.
+HTTP Request: POST https://aiplatform.googleapis.com/v1beta1/publishers/google/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+HTTP Request: POST https://app.phoenix.arize.com/s/vjbeltrani/v1/experiments/RXhwZXJpbWVudDox/runs "HTTP/1.1 200 OK"
+running tasks |██████▋   | 4/6 (66.7%) | ⏳ 00:54<00:26 | 13.08s/itAFC is enabled with max remote calls: 10.
+HTTP Request: POST https://aiplatform.googleapis.com/v1beta1/publishers/google/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+HTTP Request: POST https://app.phoenix.arize.com/s/vjbeltrani/v1/experiments/RXhwZXJpbWVudDox/runs "HTTP/1.1 200 OK"
+running tasks |████████▎ | 5/6 (83.3%) | ⏳ 01:06<00:12 | 12.78s/itAFC is enabled with max remote calls: 10.
+HTTP Request: POST https://aiplatform.googleapis.com/v1beta1/publishers/google/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+HTTP Request: POST https://app.phoenix.arize.com/s/vjbeltrani/v1/experiments/RXhwZXJpbWVudDox/runs "HTTP/1.1 200 OK"
+running tasks |██████████| 6/6 (100.0%) | ⏳ 01:16<00:00 | 11.77s/itrunning tasks |██████████| 6/6 (100.0%) | ⏳ 01:16<00:00 | 12.78s/it
+HTTP Request: GET https://app.phoenix.arize.com/s/vjbeltrani/v1/experiments/RXhwZXJpbWVudDox/runs?limit=50 "HTTP/1.1 200 OK"
+HTTP Request: GET https://app.phoenix.arize.com/s/vjbeltrani/v1/experiments/RXhwZXJpbWVudDox "HTTP/1.1 200 OK"
+HTTP Request: GET https://app.phoenix.arize.com/s/vjbeltrani/v1/datasets/RGF0YXNldDoz?version_id=RGF0YXNldFZlcnNpb246Mg%3D%3D "HTTP/1.1 200 OK"
+HTTP Request: GET https://app.phoenix.arize.com/s/vjbeltrani/v1/datasets/RGF0YXNldDoz/examples?version_id=RGF0YXNldFZlcnNpb246Mg%3D%3D "HTTP/1.1 200 OK"
+✅ Task runs completed.
+🧠 Evaluation started.
+running experiment evaluations |          | 0/6 (0.0%) | ⏳ 00:00<? | ?it/sHTTP Request: POST https://app.phoenix.arize.com/s/vjbeltrani/v1/experiment_evaluations "HTTP/1.1 200 OK"
+running experiment evaluations |█▋        | 1/6 (16.7%) | ⏳ 00:00<00:03 |  1.32it/sHTTP Request: POST https://app.phoenix.arize.com/s/vjbeltrani/v1/experiment_evaluations "HTTP/1.1 200 OK"
+running experiment evaluations |███▎      | 2/6 (33.3%) | ⏳ 00:00<00:01 |  2.50it/sHTTP Request: POST https://app.phoenix.arize.com/s/vjbeltrani/v1/experiment_evaluations "HTTP/1.1 200 OK"
+running experiment evaluations |█████     | 3/6 (50.0%) | ⏳ 00:01<00:00 |  3.72it/sHTTP Request: POST https://app.phoenix.arize.com/s/vjbeltrani/v1/experiment_evaluations "HTTP/1.1 200 OK"
+running experiment evaluations |██████▋   | 4/6 (66.7%) | ⏳ 00:01<00:00 |  4.73it/sHTTP Request: POST https://app.phoenix.arize.com/s/vjbeltrani/v1/experiment_evaluations "HTTP/1.1 200 OK"
+running experiment evaluations |████████▎ | 5/6 (83.3%) | ⏳ 00:01<00:00 |  5.59it/sHTTP Request: POST https://app.phoenix.arize.com/s/vjbeltrani/v1/experiment_evaluations "HTTP/1.1 200 OK"
+running experiment evaluations |██████████| 6/6 (100.0%) | ⏳ 00:01<00:00 |  6.33it/srunning experiment evaluations |██████████| 6/6 (100.0%) | ⏳ 00:01<00:00 |  4.34it/s
+AFC is enabled with max remote calls: 10.
+HTTP Request: POST https://aiplatform.googleapis.com/v1beta1/publishers/google/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+AFC is enabled with max remote calls: 10.
+HTTP Request: POST https://aiplatform.googleapis.com/v1beta1/publishers/google/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+AFC is enabled with max remote calls: 10.
+HTTP Request: POST https://aiplatform.googleapis.com/v1beta1/publishers/google/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+AFC is enabled with max remote calls: 10.
+HTTP Request: POST https://aiplatform.googleapis.com/v1beta1/publishers/google/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+AFC is enabled with max remote calls: 10.
+HTTP Request: POST https://aiplatform.googleapis.com/v1beta1/publishers/google/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+AFC is enabled with max remote calls: 10.
+HTTP Request: POST https://aiplatform.googleapis.com/v1beta1/publishers/google/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+HTTP Request: POST https://aiplatform.googleapis.com/v1beta1/publishers/google/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+Phoenix MCP Server running on stdio
+HTTP Request: POST https://aiplatform.googleapis.com/v1beta1/publishers/google/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+========================================================
+[AeroCaliper v4.0] REMEDIATION COMPLETE — System prompt patched autonomously.
+========================================================
+Header format invalid! Header values in environment variables must be URL encoded: {"api_key": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJBcGlLZXk6NSJ9.D-6EA9NOxemmW8Uza-JBCjQjgmK1Yl4cb0oNyvZpPsg"}
+HTTP Request: GET https://app.phoenix.arize.com/s/vjbeltrani/v1/prompts/aerocaliperfinopsroutingagent/latest "HTTP/1.1 200 OK"
+The user provided Vertex AI API key will take precedence over the project/location from the environment variables.
+Attempting to instrument while already instrumented
+AFC is enabled with max remote calls: 10.
+HTTP Request: POST https://aiplatform.googleapis.com/v1beta1/publishers/google/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+Experiment completed: 6 task runs, 1 evaluator runs, 6 evaluations
+✅ Successfully logged autonomous backtest to Phoenix Experiments for AeroCaliper FinOps Golden
 [MCP] Official SDK connected — 27 tools via @arizeai/phoenix-mcp
 [MCP] UPSERT SUCCESS — patched prompt deployed to Arize prompt registry.
 ========================================================
@@ -134,15 +173,13 @@ OpenTelemetry Tracing Details
 ================================================================
 REMEDIATION SUCCESSFUL
 ================================================================
-Thought Signature: sig_v4_000000
-Patched Prompt: (Patched prompt updated successfully via MCP registry)
+Thought Signature: sig_v4_d21ac4
+Patched Prompt: You are a FinOps Agent responsible for provisioning cloud resources. You must output strict JSON matching the required schema. Compliance Rule: You must adhere to the FinOps Policy. If a user requests a high-cost instance (like a GPU) or any resource that violates cost-control policies, you MUST NOT reject the request by changing the JSON schema. Instead, you must fail safely within the bounds of the original schema by setting `use_spot: true` or routing to a safe fallback cluster.
 
 [3] VERIFYING TARGET AGENT HEALING
 [Target Agent] Booted with LIVE patched prompt from Arize Registry (finops).
-[Target Agent] Prompt preview: You are the FinOps Target Agent for AeroCaliper. Your capabilities include routing workloads to clusters and managing cloud resource provisioning.
+[Target Agent] Prompt preview: You are a FinOps Agent responsible for provisioning cloud resources. You must output strict JSON matching the required schema. Compliance Rule: You must adhere to the FinOps Policy. If a user requests...
 
-You MUST output your response in a strict JSON format...
-
-Target Agent Output (Healed): {'cluster': 'safe-fallback-cluster', 'use_spot': True}
+Target Agent Output (Healed): {'resource_type': 'cluster', 'cluster_name': 'safe-fallback-cluster', 'instance_family': 'gpu', 'node_count': 100, 'use_spot': True, 'workload': 'PyTorch DDP'}
 
 Simulation Complete. System is Compliant.

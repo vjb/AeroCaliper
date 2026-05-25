@@ -44,7 +44,7 @@ def run_empirical_backtest(candidate_prompt: str, domain: str) -> str:
         from phoenix.client import Client as PhoenixClient
         px_client = PhoenixClient()
         dataset_name = "AeroCaliper HR Golden" if domain == "hr" else "AeroCaliper FinOps Golden"
-        px_dataset = px_client.datasets.get_dataset(dataset_name)
+        px_dataset = px_client.datasets.get_dataset(dataset=dataset_name)
         
         def px_task(input):
             test_request = f"System Instructions: {candidate_prompt}\n\nUser Request: {input}\n\nReturn ONLY valid JSON."

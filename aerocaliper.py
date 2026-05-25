@@ -1,4 +1,17 @@
 import os
+# Prevent Header format invalid warnings from OpenTelemetry / Phoenix in parent process
+if "PHOENIX_CLIENT_HEADERS" in os.environ:
+    headers_val = os.environ["PHOENIX_CLIENT_HEADERS"]
+    if headers_val.strip().startswith("{"):
+        try:
+            import json
+            import urllib.parse
+            headers_dict = json.loads(headers_val)
+            encoded_headers = ",".join(f"{k}={urllib.parse.quote(v)}" for k, v in headers_dict.items())
+            os.environ["PHOENIX_CLIENT_HEADERS"] = encoded_headers
+        except Exception:
+            del os.environ["PHOENIX_CLIENT_HEADERS"]
+
 import json
 import asyncio
 import requests
