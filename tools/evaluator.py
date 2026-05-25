@@ -74,40 +74,68 @@ def run_empirical_backtest(candidate_prompt: str, domain: str) -> str:
     except Exception as e:
         print(f"ℹ️ Phoenix Experiments sync skipped (falling back to local evaluation): {e}")
 
-    # Run Local Evaluation Loop
-    for idx, row in enumerate(filtered_cases, 1):
-        test_request = f"System Instructions: {candidate_prompt}\n\nUser Request: {row['llm.user_prompt']}\n\nReturn ONLY valid JSON."
-        
-        try:
-            response = client.models.generate_content(
-                model="gemini-3.1-pro-preview",
-                contents=test_request,
-            )
-            simulation_output = response.text.strip()
-            
-            cleaned_output = simulation_output.replace("```json", "").replace("```", "").strip()
-            payload = json.loads(cleaned_output)
-            
-            if domain == "hr":
-                res = evaluate_hr_compliance(payload)
-            else:
-                res = evaluate_finops_compliance(payload)
-                
-            if res.startswith("PASSED"):
-                passed_cases += 1
-            else:
-                failed_cases_info.append({
-                    "user_prompt": row['llm.user_prompt'],
-                    "verdict": res,
-                    "output": simulation_output
-                })
-        except Exception as e:
+    # Run Local Evaluation Loop in Parallel
+    async def evaluate_all():
+        async def evaluate_one(row):
+            test_request = f"System Instructions: {candidate_prompt}\n\nUser Request: {row['llm.user_prompt']}\n\nReturn ONLY valid JSON."
+            try:
+                # Use client.aio for async content generation
+                response = await client.aio.models.generate_content(
+                    model="gemini-3.1-pro-preview",
+                    contents=test_request,
+                )
+                simulation_output = response.text.strip()
+                cleaned_output = simulation_output.replace("```json", "").replace("```", "").strip()
+                payload = json.loads(cleaned_output)
+                if domain == "hr":
+                    res = evaluate_hr_compliance(payload)
+                else:
+                    res = evaluate_finops_compliance(payload)
+                return row['llm.user_prompt'], res, simulation_output
+            except Exception as e:
+                return row['llm.user_prompt'], f"Simulation parse/run error: {e}", "No valid JSON output"
+
+        tasks = [evaluate_one(row) for row in filtered_cases]
+        return await asyncio.gather(*tasks)
+
+    # Run the event loop synchronously inside the thread
+    try:
+        import asyncio
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        results = loop.run_until_complete(evaluate_all())
+        loop.close()
+    except Exception as e:
+        # Fallback to sync sequential loop if loop fails
+        results = []
+        for row in filtered_cases:
+            test_request = f"System Instructions: {candidate_prompt}\n\nUser Request: {row['llm.user_prompt']}\n\nReturn ONLY valid JSON."
+            try:
+                response = client.models.generate_content(
+                    model="gemini-3.1-pro-preview",
+                    contents=test_request,
+                )
+                simulation_output = response.text.strip()
+                cleaned_output = simulation_output.replace("```json", "").replace("```", "").strip()
+                payload = json.loads(cleaned_output)
+                if domain == "hr":
+                    res = evaluate_hr_compliance(payload)
+                else:
+                    res = evaluate_finops_compliance(payload)
+                results.append((row['llm.user_prompt'], res, simulation_output))
+            except Exception as ex:
+                results.append((row['llm.user_prompt'], f"Simulation error: {ex}", "No valid JSON output"))
+
+    for prompt, res, output in results:
+        if res.startswith("PASSED"):
+            passed_cases += 1
+        else:
             failed_cases_info.append({
-                "user_prompt": row['llm.user_prompt'],
-                "verdict": f"Simulation parse/run error: {e}",
-                "output": "No valid JSON output"
+                "user_prompt": prompt,
+                "verdict": res,
+                "output": output
             })
-            
+
     pass_rate = (passed_cases / len(filtered_cases)) * 100 if filtered_cases else 0
     
     if pass_rate == 100:

@@ -159,7 +159,7 @@
   .log-body::-webkit-scrollbar-thumb { background:var(--bg-elevated); border-radius:4px; }
   .log-line { display:flex; gap:12px; padding:2px 0; }
   .log-time { color:var(--text-muted); flex-shrink:0; }
-  .log-msg { color:var(--text-secondary); }
+  .log-msg { color:var(--text-secondary); white-space: pre-wrap; word-break: break-word; }
   .log-msg.info { color:var(--accent-teal); }
   .log-msg.success { color:var(--accent-green); }
   .log-msg.warn { color:var(--accent-amber); }
@@ -515,13 +515,24 @@ function setPhase(idx, state) {
 }
 function resetPhases() { for(let i=0;i<5;i++) setPhase(i,'idle'); }
 
+function formatLogMessage(msg) {
+  let escaped = escHtml(msg);
+  // Convert double asterisks to strong tags
+  escaped = escaped.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  // Convert single asterisks to em tags
+  escaped = escaped.replace(/\*(.*?)\*/g, '<em>$1</em>');
+  // Convert code backticks to code tags
+  escaped = escaped.replace(/`(.*?)`/g, '<code style="background:rgba(255,255,255,0.1);padding:2px 4px;border-radius:4px;font-family:monospace;">$1</code>');
+  return escaped;
+}
+
 function addLog(msg, type='') {
   const body = document.getElementById('logBody');
   if(body.querySelector('.log-placeholder')) body.innerHTML='';
   const now = new Date().toLocaleTimeString('en-US',{hour12:false});
   const line = document.createElement('div');
   line.className='log-line';
-  line.innerHTML=`<span class="log-time">${now}</span><span class="log-msg ${type}">${escHtml(msg)}</span>`;
+  line.innerHTML=`<span class="log-time">${now}</span><span class="log-msg ${type}">${formatLogMessage(msg)}</span>`;
   body.appendChild(line);
   body.scrollTop=body.scrollHeight;
 }
@@ -567,10 +578,17 @@ function handleA2UIEvent(ev) {
     case 'long_term_memory':
       addA2UICard(`<div class="a2ui-card candidate"><div class="card-header"><span class="card-title">🧠 Long-Term Memory</span><span class="card-badge badge-safe" style="background:var(--accent-teal);color:#fff;">VECTOR HIT</span></div><div class="card-body">${escHtml(ev.memory_summary)}</div></div>`);
       break;
-    case 'thought_signature':
-      addA2UICard(`<div class="a2ui-card candidate"><div class="card-header"><span class="card-title">🔑 Thought Signature</span><span class="card-badge" style="background:rgba(139,92,246,0.15);color:var(--accent-violet)">${escHtml(ev.token)}</span></div><div class="card-body">${escHtml(ev.preview)}</div></div>`);
+    case 'thought_signature': {
+      const existing = document.getElementById('thought-signature-card');
+      if (existing) {
+        existing.querySelector('.card-badge').textContent = ev.token;
+        existing.querySelector('.card-body').textContent = ev.preview;
+      } else {
+        addA2UICard(`<div id="thought-signature-card" class="a2ui-card candidate"><div class="card-header"><span class="card-title">🔑 Thought Signature</span><span class="card-badge" style="background:rgba(139,92,246,0.15);color:var(--accent-violet)">${escHtml(ev.token)}</span></div><div class="card-body">${escHtml(ev.preview)}</div></div>`);
+      }
       setPhase(2,'done'); setPhase(3,'active');
       break;
+    }
     case 'candidate_prompt':
       document.getElementById('approvalPromptText').textContent = ev.prompt || '';
       document.getElementById('approvalPanel').classList.add('visible');

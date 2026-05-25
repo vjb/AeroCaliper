@@ -20,15 +20,15 @@ def test_fetch_failed_traces_returns_dict(monkeypatch):
 
 def test_search_enterprise_policy_fails_loud():
     # Store old env and remove it
-    old_project = os.environ.get("GOOGLE_CLOUD_PROJECT")
-    if "GOOGLE_CLOUD_PROJECT" in os.environ:
-        del os.environ["GOOGLE_CLOUD_PROJECT"]
+    old_project = os.environ.get("GCP_PROJECT_ID")
+    if "GCP_PROJECT_ID" in os.environ:
+        del os.environ["GCP_PROJECT_ID"]
     
     with pytest.raises((RuntimeError, KeyError, Exception)) as excinfo:
         search_enterprise_policy("finops")
     
     if old_project:
-        os.environ["GOOGLE_CLOUD_PROJECT"] = old_project
+        os.environ["GCP_PROJECT_ID"] = old_project
 
 def test_run_empirical_backtest_fails_explicitly(monkeypatch):
     import os

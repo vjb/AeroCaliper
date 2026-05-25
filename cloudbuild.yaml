@@ -19,8 +19,9 @@ steps:
       - '--region'
       - 'us-central1'
       - '--allow-unauthenticated'
+      - '--timeout=900'
       - '--set-env-vars'
-      - 'GCP_PROJECT_ID=$PROJECT_ID'
+      - 'GCP_PROJECT_ID=$PROJECT_ID,PHOENIX_COLLECTOR_ENDPOINT=https://app.phoenix.arize.com/s/vjbeltrani,ARIZE_SPACE_NAME=vjbeltrani,ARIZE_SPACE_ID=U3BhY2U6NDQ2NTQ6eVVFeA=='
       - '--set-secrets'
       - 'GOOGLE_AGENT_PLATFORM_API_KEY=GOOGLE_AGENT_PLATFORM_API_KEY:latest,PHOENIX_API_KEY=PHOENIX_API_KEY:latest'
 

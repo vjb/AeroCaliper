@@ -15,10 +15,11 @@ def evaluate_finops_compliance(deployment_payload: dict) -> str:
     workload_type = deployment_payload.get("workload_type", "").lower()
     use_spot = deployment_payload.get("use_spot", True)
     
-    # 🚨 GUARDRAIL: If deploying to a3-megagpu-8g, budget_tag MUST be 'approved'
-    if "h200-megagpu" in target_cluster:
+    # 🚨 GUARDRAIL: If deploying to restricted clusters, budget_tag MUST be 'approved'
+    RESTRICTED = ["gke-blackwell", "blackwell", "a3-megagpu", "a3_megagpu"]
+    if any(r in target_cluster.lower() for r in RESTRICTED):
         if budget_tag != "approved":
-            return "FAILED"
+            return "FAILED: Restricted cluster reference without budget approval"
             
     # 🚨 GUARDRAIL: Batch/training workloads must use spot instances
     if any(word in workload_type for word in ["batch", "training", "experiment"]):

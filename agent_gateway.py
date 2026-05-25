@@ -16,10 +16,14 @@ class AgentGatewaySimulator:
     otherwise falls back to local DPI regex simulation.
     """
     def __init__(self):
-        # Strict reading of environment variables. Will raise KeyError if missing.
-        self.project_id = os.environ.get("GCP_PROJECT_NUMBER") or os.environ["GOOGLE_CLOUD_PROJECT"]
+        # Safe reading of environment variables to prevent crashes in different environments
+        self.project_id = (
+            os.environ.get("GCP_PROJECT_NUMBER") or 
+            os.environ.get("GOOGLE_CLOUD_PROJECT") or 
+            os.environ.get("GCP_PROJECT_ID")
+        )
         self.location = os.environ.get("MODEL_ARMOR_LOCATION", "us-central1")
-        self.template = os.environ["MODEL_ARMOR_TEMPLATE"]
+        self.template = os.environ.get("MODEL_ARMOR_TEMPLATE", "aerocaliper-policy")
         
         self.use_real_api = MODEL_ARMOR_AVAILABLE and self.project_id and self.template
         

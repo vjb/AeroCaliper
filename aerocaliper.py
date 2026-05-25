@@ -342,8 +342,6 @@ class AeroCaliperAgent:
             gcp_print(m)
             self._emit("log", {"msg": m, "level": "section"})
             
-        self._emit("complete", {})
-
         result = {
             "patched_prompt": final_prompt,
             "thought_signature": thought_sig,
