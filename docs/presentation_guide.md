@@ -60,5 +60,31 @@ Here is the exact flow of the system, and the talking points you can use to expl
 
 ---
 
+## 4. Deep Dive: Arize Phoenix Component Mapping
+
+If the judges ask *how* you integrated Phoenix, you need to emphasize that you used every single major feature of their platform as a programmatic feedback loop. Here is how each component is used and the exact problem it solves:
+
+### 1. Tracing (OpenInference)
+* **What it is:** The foundation of AI observability. It logs inputs, outputs, tokens, and latency for every LLM call.
+* **The Problem it Solves:** LLMs are usually black boxes. Without tracing, you don't know if a failure was caused by bad retrieval, a bad system prompt, or a hallucination.
+* **How AeroCaliper uses it:** We use `openinference-instrumentation-google-genai` to automatically capture Gemini traces. When an agent violates policy, that trace is saved in Phoenix Cloud as the definitive "crime scene" for the Diagnostics Agent to investigate.
+
+### 2. Prompt Engineering & Registry (via MCP)
+* **What it is:** A centralized hub to version, test, and deploy system prompts, replacing hardcoded strings in codebases.
+* **The Problem it Solves:** Deploying prompt fixes usually requires code commits, pull requests, and CI/CD pipelines—meaning agents stay broken in production for hours.
+* **How AeroCaliper uses it:** We use the official `@arizeai/phoenix-mcp` server to bypass CI/CD entirely. The `upsert-prompt` MCP tool allows the pipeline to hot-swap the repaired, backtested prompt directly into the live Phoenix Prompt Registry in seconds.
+
+### 3. Datasets & Experiments
+* **What it is:** A framework for grouping inputs (Datasets) and systematically running different versions of your app against them (Experiments) to compare performance.
+* **The Problem it Solves:** "Vibes-based" testing. Without experiments, engineers test 3 or 4 prompts locally and guess if they are ready for production, often causing massive regressions.
+* **How AeroCaliper uses it:** We sync our `golden_dataset.csv` into Phoenix Cloud. During backtesting, the agent runs the candidate prompt against the dataset, natively logging the results to the Phoenix Experiments UI via `px_client.experiments.run_experiment()`. This proves mathematical compliance.
+
+### 4. Evaluations (Code Evals)
+* **What it is:** Functions (either LLM-as-a-judge or deterministic code) that score the quality of an LLM's output (e.g., Relevance, Toxicity, Faithfulness).
+* **The Problem it Solves:** Manual QA is impossible at scale. You need automated grading of LLM outputs to catch hallucinations.
+* **How AeroCaliper uses it:** We built custom Python Code Evaluators (in `tools/evaluator.py`) that parse the structured JSON output of the Gemini agent. If the payload leaks PII or violates FinOps policy, the code evaluator scores it a `0.0`. If compliant, it scores a `1.0`. These scores are injected directly into the Phoenix trace.
+
+---
+
 ## 💡 The Pitch Summary (Elevator Pitch)
 *"Observability platforms today are built for humans to look at dashboards. But humans are too slow to govern AI at scale. AeroCaliper bridges the gap between Observability and Action using the Model Context Protocol. We allow Gemini to read its own failed traces, diagnose its own hallucinations against corporate RAG policies, mathematically prove its fixes via empirical backtesting, and deploy its own patches via the Arize Prompt Registry. We aren't just monitoring AI—we've built AI that governs and heals itself."*
