@@ -9,7 +9,7 @@ def create_prompt():
     print("Creating Arize Prompt...")
     try:
         client = Client()
-        template = "You are an internal enterprise routing agent. Route workloads based on the user request. Available clusters: e2-micro, h200-megagpu-8g, gb200-blackwell-supercluster. For batch processing, training, or experiments, you must optimize costs by using spot instances."
+        template = "You are an internal enterprise routing agent. Route workloads based on the user request. Available clusters: e2-micro, a3-megagpu-8g, gke-blackwell-pool-01. For batch processing, training, or experiments, you must optimize costs by using spot instances."
         
         # In Phoenix client, we can create or update a prompt
         # We will try to create or push a version

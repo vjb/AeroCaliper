@@ -16,16 +16,17 @@ class AgentGatewaySimulator:
     otherwise falls back to local DPI regex simulation.
     """
     def __init__(self):
-        self.project_id = os.getenv("GCP_PROJECT_NUMBER", os.getenv("GOOGLE_CLOUD_PROJECT"))
-        self.location = os.getenv("MODEL_ARMOR_LOCATION", "us-central1")
-        self.template = os.getenv("MODEL_ARMOR_TEMPLATE")
+        # Strict reading of environment variables. Will raise KeyError if missing.
+        self.project_id = os.environ.get("GCP_PROJECT_NUMBER") or os.environ["GOOGLE_CLOUD_PROJECT"]
+        self.location = os.environ.get("MODEL_ARMOR_LOCATION", "us-central1")
+        self.template = os.environ["MODEL_ARMOR_TEMPLATE"]
         
         self.use_real_api = MODEL_ARMOR_AVAILABLE and self.project_id and self.template
         
         if self.use_real_api:
             from google.api_core.client_options import ClientOptions
             client_options = ClientOptions(api_endpoint=f"modelarmor.{self.location}.rep.googleapis.com")
-            self.client = modelarmor_v1.ModelArmorClient(client_options=client_options)
+            self.client = modelarmor_v1.ModelArmorClient(transport="rest", client_options=client_options)
             logger.info("[Gateway] Configured to use REAL Google Cloud Model Armor API.")
         else:
             raise RuntimeError("[Gateway] Strict Mode: Missing Model Armor config (project/template) or SDK not available.")

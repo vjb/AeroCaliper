@@ -12,7 +12,7 @@ This policy applies to all automated provisioning agents, CI/CD pipelines, auton
 3.3 Lifecycle Management: Non-production resources must be terminated or paused outside of standard business hours unless explicitly exempted by a Director-level override.
 
 4.0 RESOURCE CLASSIFICATION AND BUDGETING
-4.1 Any deployment routed to the h200-megagpu-8g tier or gb200-blackwell-supercluster clusters MUST include the parameter budget_tag: approved. 
+4.1 Any deployment routed to the a3-megagpu-8g tier or gke-blackwell-pool-01 clusters MUST include the parameter budget_tag: approved. 
 4.2 For any batch processing, training, or experimental workloads on massive GPU clusters, you MUST utilize Spot instances to optimize costs. use_spot must be set to true.
 
 5.0 AUDIT AND REMEDIATION

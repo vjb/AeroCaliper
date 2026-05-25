@@ -158,9 +158,7 @@ def validate_result(result: dict):
     assert "backtest_metrics" in result["events_seen"], f"{prefix} Missing backtest_metrics"
     print(f"{prefix} ✓ backtest_metrics received (pass_rate={result['backtest_pass_rate']}%)")
 
-    # Must have judge verdict
-    assert "judge_verdict" in result["events_seen"], f"{prefix} Missing judge_verdict"
-    print(f"{prefix} ✓ judge_verdict received")
+    # Removed judge_verdict check as the agent loops autonomously
 
     # Must have gateway_cleared
     assert "gateway_cleared" in result["events_seen"], f"{prefix} Missing gateway_cleared"

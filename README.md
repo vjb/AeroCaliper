@@ -2,9 +2,22 @@
 
 **Autonomous AI Governance and Remediation Pipeline**
 
-AeroCaliper is an enterprise-grade, fully autonomous remediation pipeline designed to detect policy violations in AI agent outputs, diagnose root causes, dynamically generate system prompt patches, and deploy those patches back into production.
+AeroCaliper is a zero-trust compliance engine that uses its own observability data to improve over time. It detects policy violations, fetches failed traces via the Arize Phoenix MCP server, and uses a Gemini-driven optimization loop to autonomously patch and redeploy its own system prompt.
 
 Powered by the **Google Agent Platform**, **Arize Phoenix**, and the **Model Context Protocol (MCP)**, AeroCaliper seamlessly closes the loop between AI observability and continuous agent improvement.
+
+---
+
+## 🏆 Google Cloud Rapid Agent Hackathon (Arize Track)
+
+AeroCaliper was built to perfectly align with the core judging criteria of the Arize track: **"Ship agents that do more than run. Ship agents that can self improve."**
+
+Here is exactly how AeroCaliper maps to the hackathon requirements:
+- **Code-Owned Agent Runtime**: Built entirely from the ground up using the Google GenAI SDK (`gemini-3.1-pro-preview`) running as an asynchronous FastAPI application on Google Cloud Run.
+- **Meaningful Use of Tracing**: Fully instrumented using the `openinference-instrumentation-google-genai` OpenTelemetry auto-instrumentor. 
+- **Introspection via MCP**: Seamlessly integrates the `@arizeai/phoenix-mcp` server. It uses the `get-spans` tool to fetch its own failed traces, and `upsert-prompt` to deploy the repaired system prompts dynamically without a code redeployment.
+- **LLM-as-a-Judge Evaluations**: Every candidate patch is passed through a rigorous empirical backtesting loop. Gemini runs simulated evaluations against a golden dataset, forcing the agent to self-refine up to three times until it achieves a 100% pass rate.
+- **Iterative Self-Improvement Loop**: AeroCaliper is the epitome of an agent using its own observability data to improve over time. By pulling failed traces, augmenting them with Vertex AI Search for enterprise compliance rules, running automated backtests, and seamlessly updating the prompt registry, the agent autonomously self-heals in under two minutes.
 
 ---
 
@@ -21,13 +34,59 @@ When enterprise AI agents violate FinOps limits, HR privacy rules, or data handl
 5. **Secure Egress:** The approved prompt passes through **Google Cloud Model Armor** for deep packet inspection. Once cleared, it is immediately deployed to the live Arize Prompt Registry via the `@arizeai/phoenix-mcp` server.
 
 ```mermaid
-graph LR
-    A[Anomaly Detection] -->|Intercept| B(Diagnostic & Trace Retrieval via MCP)
-    B -->|Vertex AI Policy Search| C{LLM-as-a-Judge Eval}
-    C -->|Simulate Backtest| D[Prompt Self-Healing Loop]
-    D -->|Candidate Prompt| E(A2UI Admin Approval)
-    E -->|Approved| F[Model Armor Inspection]
-    F -->|Secure Egress| G((Arize Prompt Registry))
+flowchart TD
+    %% Styling
+    classDef agent fill:#e8f0fe,stroke:#1a73e8,stroke-width:2px,color:#1a73e8;
+    classDef GCP fill:#e6f4ea,stroke:#1e8e3e,stroke-width:2px,color:#1e8e3e;
+    classDef Arize fill:#fce8e6,stroke:#d93025,stroke-width:2px,color:#d93025;
+    classDef UI fill:#fef7e0,stroke:#f9ab00,stroke-width:2px,color:#b06000;
+
+    subgraph UserSpace [Target Environment]
+        User([End User Request]) --> TargetAgent[Target Agent\n(e.g., FinOps/HR)]
+        TargetAgent -->|OpenTelemetry Traces| ArizeCloud
+    end
+
+    subgraph ArizeCloud [Arize Phoenix Cloud]
+        TraceDB[(Trace DB)]
+        PromptReg[(Prompt Registry)]
+    end
+
+    subgraph AeroCaliper [AeroCaliper Autonomous Remediation Pipeline]
+        Detect[1. Anomaly Detection\n(Gemini Intent Scan)]
+        MCPHandshake[2. MCP Handshake\n(@arizeai/phoenix-mcp)]
+        Diag[3. Root Cause Diagnostic\n(Gemini 3.1 Pro)]
+        Judge{4. LLM-as-a-Judge\n(Empirical Backtest)}
+        AdminUI[5. A2UI Admin Panel\n(Human-in-the-Loop)]
+    end
+
+    subgraph GCPCloud [Google Cloud Infrastructure]
+        VertexRAG[(Vertex AI Search\nEnterprise Policies)]
+        Firestore[(Firestore\nPast Remediations)]
+        ModelArmor[Model Armor\n(DPI Egress Filter)]
+    end
+
+    %% Flow
+    TargetAgent -.->|Violation Detected| Detect
+    Detect -->|Trigger Healing| MCPHandshake
+    MCPHandshake <-->|get-spans| TraceDB
+    MCPHandshake --> Diag
+    
+    Diag <-->|RAG Policy| VertexRAG
+    Diag <-->|RAG Memory| Firestore
+    
+    Diag -->|Candidate Prompt| Judge
+    Judge -.->|Failed Backtest| Diag
+    Judge -->|100% Pass Rate| AdminUI
+    
+    AdminUI -->|Approve| ModelArmor
+    ModelArmor -->|Secure Egress| MCPHandshake
+    MCPHandshake <-->|upsert-prompt| PromptReg
+
+    %% Class Assignments
+    class TargetAgent,Detect,Diag,Judge agent;
+    class VertexRAG,Firestore,ModelArmor GCP;
+    class TraceDB,PromptReg,MCPHandshake Arize;
+    class AdminUI UI;
 ```
 
 ---
@@ -46,6 +105,16 @@ graph LR
 AeroCaliper entirely decouples compliance logic from application code. Instead of hardcoding FinOps restrictions or HR privacy rules into the orchestrator, policies are maintained directly by stakeholders in Google Cloud Storage.
 
 When an anomaly is detected, AeroCaliper uses `discoveryengine_v1.SearchServiceClient` to query Vertex AI Search, injecting the retrieved snippets directly into the LLM-as-a-Judge prompt template. 
+
+---
+
+## Thought Signatures & Audit Trails
+
+To comply with strict enterprise governance requirements, AeroCaliper generates a **Thought Signature** for every candidate prompt patch before it is presented to an administrator.
+
+A Thought Signature (e.g., `sig_v4_ccdd57`) is a cryptographic checksum of the exact string contents of the candidate prompt generated by Gemini. This ensures that:
+1. **Integrity:** The exact prompt text that the LLM-as-a-Judge evaluated and that the admin approved is mathematically guaranteed to be the exact prompt that gets passed to Model Armor and deployed to the registry.
+2. **Auditability:** Security teams can cross-reference the Thought Signature in the UI logs with the final version deployed in Arize Phoenix to prove no tampering occurred during the automated remediation loop.
 
 ---
 

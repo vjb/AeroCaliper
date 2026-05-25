@@ -3,8 +3,9 @@ from google.cloud import storage
 from google.cloud import discoveryengine_v1
 
 def upload_and_import():
-    project_id = "aerocaliper"
-    bucket_name = "aerocaliper-finops-rag-vjbel"
+    project_id = os.environ["GCP_PROJECT_ID"]
+    bucket_name = os.environ["BUCKET_NAME_HR"]
+    project_number = os.environ["GCP_PROJECT_NUMBER"]
     
     # Upload to GCS
     client = storage.Client(project=project_id)
@@ -15,7 +16,7 @@ def upload_and_import():
 
     # Trigger Import to Datastore
     ds_client = discoveryengine_v1.DocumentServiceClient()
-    parent = f"projects/622472185650/locations/global/collections/default_collection/dataStores/finops-ds/branches/0"
+    parent = f"projects/{project_number}/locations/global/collections/default_collection/dataStores/finops-ds/branches/0"
     
     request = discoveryengine_v1.ImportDocumentsRequest(
         parent=parent,

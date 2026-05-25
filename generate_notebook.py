@@ -19,10 +19,10 @@ from dotenv import load_dotenv
 # Load environment configuration
 load_dotenv(dotenv_path='../.env')
 
-PROJECT_ID = os.getenv("GCP_PROJECT_ID", "622472185650")
-LOCATION = os.getenv("VERTEX_SEARCH_LOCATION", "global")
-FINOPS_DATASTORE = os.getenv("VERTEX_DATASTORE_ID", "finops-ds")
-PHOENIX_API_KEY = os.getenv("PHOENIX_API_KEY")
+PROJECT_ID = os.environ["GCP_PROJECT_ID"]
+LOCATION = os.environ.get("VERTEX_SEARCH_LOCATION", "global")
+FINOPS_DATASTORE = os.environ.get("VERTEX_DATASTORE_ID", "finops-ds")
+PHOENIX_API_KEY = os.environ["PHOENIX_API_KEY"]
 
 print(f"Active Google Cloud Project: {PROJECT_ID}")
 print(f"Vertex Search Datastore: {FINOPS_DATASTORE}")
@@ -80,8 +80,8 @@ import pandas as pd
 
 print("Initializing live trace dataset for evaluation...")
 trace_df = pd.DataFrame([
-    {"trace_id": "trace_f82a1", "agent_output": "{'target_cluster': 'gb200-blackwell-supercluster', 'workload_type': 'database', 'use_spot': False}"},
-    {"trace_id": "trace_b49c2", "agent_output": "{'target_cluster': 'gb200-blackwell-supercluster', 'workload_type': 'database', 'use_spot': False, 'budget_tag': 'approved'}"}
+    {"trace_id": "trace_f82a1", "agent_output": "{'target_cluster': 'gke-blackwell-pool-01', 'workload_type': 'database', 'use_spot': False}"},
+    {"trace_id": "trace_b49c2", "agent_output": "{'target_cluster': 'gke-blackwell-pool-01', 'workload_type': 'database', 'use_spot': False, 'budget_tag': 'approved'}"}
 ])
 
 display(trace_df)

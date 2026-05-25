@@ -24,12 +24,7 @@ template_config = modelarmor_v1.Template(
     filter_config=modelarmor_v1.FilterConfig(
         # Use valid attributes based on the error output: PiAndJailbreakFilterSettings
         pi_and_jailbreak_filter_settings=modelarmor_v1.PiAndJailbreakFilterSettings(
-            jailbreak_filter_settings=modelarmor_v1.JailbreakFilterSettings(
-                filter_enforcement=modelarmor_v1.FilterEnforcement.ENABLED
-            ),
-            pi_filter_settings=modelarmor_v1.PiFilterSettings(
-                filter_enforcement=modelarmor_v1.FilterEnforcement.ENABLED
-            )
+            filter_enforcement=modelarmor_v1.PiAndJailbreakFilterSettings.PiAndJailbreakFilterEnforcement.ENABLED
         )
     )
 )

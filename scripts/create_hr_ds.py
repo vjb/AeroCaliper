@@ -3,10 +3,10 @@ from google.cloud import discoveryengine_v1
 from google.api_core.client_options import ClientOptions
 
 def create_and_import():
-    project_id = "aerocaliper"
+    project_id = os.environ["GCP_PROJECT_ID"]
     location = "global"
     data_store_id = "hr-ds"
-    bucket_name = "aerocaliper-rag-hr-vjbel"
+    bucket_name = os.environ["BUCKET_NAME_HR"]
 
     # Set quota project explicitly in case of billing issues
     client_options = ClientOptions(quota_project_id=project_id)

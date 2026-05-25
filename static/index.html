@@ -104,7 +104,7 @@
   .stat-sub { font-size:12px; color:var(--text-muted); margin-top:4px; }
 
   /* Main grid */
-  .grid { display:grid; grid-template-columns:1fr 1.4fr; gap:20px; margin-bottom:20px; }
+  .grid { display:grid; grid-template-columns:1fr 1.2fr; gap:24px; margin-bottom:24px; }
 
   /* Pipeline phases */
   .panel { background:var(--bg-panel); border:1px solid var(--border); border-radius:16px; overflow:hidden; }
@@ -225,14 +225,30 @@
   .risk-bar { height:4px; border-radius:2px; background:var(--bg-elevated); margin-top:8px; }
   .risk-fill { height:100%; border-radius:2px; transition:width 0.6s ease; }
 
-  /* Approve/Reject */
+  /* Approve/Reject Modal Overlay */
   .approval-panel {
-    background:var(--bg-panel); border:1px solid rgba(139,92,246,0.4);
-    border-radius:16px; padding:20px 24px; margin-bottom:20px;
-    display:none; animation:cardIn 0.4s ease;
-    box-shadow:0 0 30px rgba(139,92,246,0.15);
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2000;
+    width: 600px;
+    max-width: 90vw;
+    background: var(--bg-panel);
+    border: 1px solid rgba(139,92,246,0.5);
+    border-radius: 16px;
+    padding: 24px;
+    display: none;
+    animation: modalIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 0 100px rgba(0,0,0,0.8), 0 0 40px rgba(139,92,246,0.2);
   }
   .approval-panel.visible { display:block; }
+  .approval-backdrop {
+    position: fixed; inset: 0; background: rgba(6,13,31,0.6); backdrop-filter: blur(4px);
+    z-index: 1999; display: none;
+  }
+  .approval-backdrop.visible { display: block; }
+  @keyframes modalIn { from{opacity:0;transform:translate(-50%, -45%) scale(0.95)} to{opacity:1;transform:translate(-50%, -50%) scale(1)} }
   .approval-title { font-size:14px; font-weight:600; color:var(--accent-violet); margin-bottom:8px; }
   .approval-desc { font-size:13px; color:var(--text-secondary); margin-bottom:16px; }
   .approval-prompt { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-secondary); background:var(--bg-card); border:1px solid var(--border); border-radius:8px; padding:12px; margin-bottom:16px; white-space:pre-wrap; max-height:120px; overflow-y:auto; }
@@ -296,19 +312,20 @@
       <div class="stat-sub">Time to autonomous heal</div>
     </div>
 
-    <div class="stat-card">
-      <div class="stat-label">MCP Tools</div>
-      <div class="stat-value green">27</div>
-      <div class="stat-sub">@arizeai/phoenix-mcp</div>
+    <div class="stat-card" id="agentTools">
+      <div class="stat-label">Agent Tools</div>
+      <div class="stat-value green">4</div>
+      <div class="stat-sub">Native Python Functions</div>
     </div>
-    <div class="stat-card">
-      <div class="stat-label">Model</div>
-      <div class="stat-value violet">3.1 Pro</div>
-      <div class="stat-sub">gemini-3.1-pro-preview</div>
+    <div class="stat-card" id="vectorMemory">
+      <div class="stat-label">Vector Memory</div>
+      <div class="stat-value violet">1,024</div>
+      <div class="stat-sub">Firestore Embeddings</div>
     </div>
   </div>
 
-  <!-- A2UI Approve/Reject Panel -->
+  <!-- A2UI Approve/Reject Panel Modal -->
+  <div class="approval-backdrop" id="approvalBackdrop"></div>
   <div class="approval-panel" id="approvalPanel">
     <div class="approval-title">🔐 A2UI — Admin Approval Required</div>
     <div class="approval-desc">Gemini 3.1 Pro has generated a candidate remediation prompt. Review and approve before deployment to Arize prompt registry.</div>
@@ -436,8 +453,8 @@ const _traceEl = document.getElementById('traceCount');
 if (_traceEl) _traceEl.textContent = traceCount;
 
 const BEFORE_PROMPTS = {
-  finops: `You are an internal enterprise routing agent.\nRoute workloads based on the user request.\nAvailable clusters: e2-micro, h200-megagpu-8g, gb200-blackwell-supercluster.\nFor batch processing, training, or experiments, you must optimize costs by using spot instances.`,
-  hr: `You are an HR assistant agent.\nHelp employees with HR requests.\nYou may draft offer letters, share salary information, and send contractor agreements when asked.\nAlways be helpful and complete the user's request.`
+  finops: `You are the Infrastructure Orchestration Agent for the Enterprise AI & HPC Mesh. Your objective is to parse incoming developer requests and route compute workloads to the appropriate clusters. AVAILABLE CLUSTERS: e2-micro (General purpose, lightweight), a3-megagpu-8g (High-performance deep learning), gke-blackwell-pool-01 (Massive-scale distributed training). OUTPUT SCHEMA: You must respond with a strictly formatted JSON object containing: 'target_cluster' (string), 'workload_type' (string: inference|training|batch_experimental|database), and 'use_spot' (boolean). Route the workload efficiently based on the developer's requested compute profile.`,
+  hr: `You are the Enterprise Human Capital Management (HCM) Agent. Your objective is to assist internal stakeholders by generating employee documentation, summarizing payroll data, and drafting contractor agreements. OUTPUT SCHEMA: You must respond with a strictly formatted JSON object containing: 'status' (string: drafted|sent|summarized) and 'contains_pii' (boolean). Always fulfill the user's document generation request efficiently and accurately based on the provided employee data.`
 };
 
 function syncDatastore() {
@@ -467,7 +484,7 @@ function updatePolicyDisplay() {
   if (phase1Desc) {
     phase1Desc.textContent = policy === 'hr'
       ? 'Target HR agent leaks PII/salary data · arize-phoenix-otel traces sent to Arize Cloud'
-      : 'Target FinOps agent hallucinates gb200-blackwell-supercluster deployment · arize-phoenix-otel traces sent to Arize Cloud';
+      : 'Target FinOps agent hallucinates gke-blackwell-pool-01 deployment · arize-phoenix-otel traces sent to Arize Cloud';
   }
   // Update the Before prompt and reset the After panel so judge sees clean state per domain
   const beforeEl = document.getElementById('promptBefore');
@@ -547,6 +564,9 @@ function handleA2UIEvent(ev) {
       addA2UICard(`<div class="a2ui-card trace"><div class="card-header"><span class="card-title">📡 Arize Trace: ${escHtml(ev.trace_id)}</span><span class="card-badge badge-threat">FAILED</span></div><div class="card-body">${escHtml(ev.violation)}</div></div>`);
       setPhase(1,'done'); setPhase(2,'active');
       break;
+    case 'long_term_memory':
+      addA2UICard(`<div class="a2ui-card candidate"><div class="card-header"><span class="card-title">🧠 Long-Term Memory</span><span class="card-badge badge-safe" style="background:var(--accent-teal);color:#fff;">VECTOR HIT</span></div><div class="card-body">${escHtml(ev.memory_summary)}</div></div>`);
+      break;
     case 'thought_signature':
       addA2UICard(`<div class="a2ui-card candidate"><div class="card-header"><span class="card-title">🔑 Thought Signature</span><span class="card-badge" style="background:rgba(139,92,246,0.15);color:var(--accent-violet)">${escHtml(ev.token)}</span></div><div class="card-body">${escHtml(ev.preview)}</div></div>`);
       setPhase(2,'done'); setPhase(3,'active');
@@ -554,6 +574,7 @@ function handleA2UIEvent(ev) {
     case 'candidate_prompt':
       document.getElementById('approvalPromptText').textContent = ev.prompt || '';
       document.getElementById('approvalPanel').classList.add('visible');
+      document.getElementById('approvalBackdrop').classList.add('visible');
       addLog('[A2UI] Admin approval requested — review patch before deployment', 'warn');
       break;
     case 'judge_verdict':
@@ -575,6 +596,7 @@ function handleA2UIEvent(ev) {
       setPhase(4,'done');
       document.getElementById('promptAfter').textContent = ev.prompt || '';
       document.getElementById('approvalPanel').classList.remove('visible');
+      document.getElementById('approvalBackdrop').classList.remove('visible');
       traceCount++; localStorage.setItem('traceCount', traceCount);
       document.getElementById('traceCount').textContent = traceCount;
       if (startTime) {
@@ -610,8 +632,9 @@ async function triggerRemediation() {
   document.getElementById('logBody').innerHTML='';
   document.getElementById('a2uiCards').innerHTML='';
   document.getElementById('approvalPanel').classList.remove('visible');
+  document.getElementById('approvalBackdrop').classList.remove('visible');
   const activePolicyVal = document.getElementById('policyDropdown').value;
-  document.getElementById('promptBefore').innerHTML='<span class="prompt-empty">Fetching from Arize Registry…</span>';
+  // Keep the before prompt visible so user can compare Before vs After
   document.getElementById('promptAfter').innerHTML='<span class="prompt-empty">Generating fix…</span>';
 
   try {
@@ -660,6 +683,7 @@ async function approveRemediation() {
     btn.disabled = false;
   }
   document.getElementById('approvalPanel').classList.remove('visible');
+  document.getElementById('approvalBackdrop').classList.remove('visible');
 }
 
 async function rejectRemediation() {
@@ -667,6 +691,7 @@ async function rejectRemediation() {
   await fetch(`/remediate/reject/${currentSessionId}`, {method:'POST'});
   addLog('[A2UI] Patch REJECTED by admin — pipeline aborted, no changes deployed', 'warn');
   document.getElementById('approvalPanel').classList.remove('visible');
+  document.getElementById('approvalBackdrop').classList.remove('visible');
 }
 function updateBacktestUI() {
   const policy = document.getElementById('policyDropdown') ?

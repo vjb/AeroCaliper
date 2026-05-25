@@ -1,0 +1,1252 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://arizeai-433a7140.mintlify.app/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# What is Arize Phoenix?
+
+> AI Observability and Evaluation
+
+Phoenix helps you understand and improve AI applications by giving you a workflow for debugging and iteration. You can send detailed logging information, known as traces, from your app to see exactly what happened during a run, score outputs using evaluation tests to identify failures and regressions, iterate on your prompts using real production examples, and optimize your app with experiments that compare changes on the same inputs. Together, these tools help you move from inspecting individual runs to improving quality with evidence.
+
+Phoenix is built by [Arize AI](https://www.arize.com) and the open-source community. It is built on top of OpenTelemetry and is powered by [OpenInference](https://github.com/Arize-ai/openinference) instrumentation. See [Integrations](/docs/phoenix/integrations) for details.
+
+## Features
+
+<Tabs>
+  <Tab title="Tracing" icon="telescope">
+    <Frame caption="Tracing in Phoenix">
+      <video src="https://storage.googleapis.com/arize-phoenix-assets/assets/gifs/tracing.mp4" width="100%" height="100%" style={{ display: 'block', objectFit: 'fill', backgroundColor: 'transparent' }} controls autoPlay muted loop />
+    </Frame>
+
+    [Tracing](/docs/phoenix/tracing/llm-traces) lets you see what happened during a single run of your AI application, step by step. A trace captures model calls, retrieval, tool use, and custom logic so you can debug behavior and understand where time is spent.
+
+    Phoenix accepts traces over OpenTelemetry (OTLP) and provides [auto-instrumentation](/docs/phoenix/integrations) for popular frameworks (LlamaIndex, LangChain, DSPy, Mastra, Vercel AI SDK), providers (OpenAI, Bedrock, Anthropic), and languages (Python, TypeScript, Java).
+  </Tab>
+
+  <Tab title="Evaluation" icon="clipboard-check">
+    <Frame caption="Evals in the Phoenix UI">
+      <video src="https://storage.googleapis.com/arize-phoenix-assets/assets/gifs/evals.mp4" width="100%" height="100%" style={{ display: 'block', objectFit: 'fill', backgroundColor: 'transparent' }} controls autoPlay muted loop />
+    </Frame>
+
+    [Evaluations](/docs/phoenix/evaluation/llm-evals) help you measure the output quality of your application. You can score traces & spans with LLM-based evaluators, code-based checks, or human labels so you can track performance and identify failures consistently.
+
+    * [LLM-based evaluations](/docs/phoenix/evaluation/running-pre-tested-evals) — Run pre-built or custom evaluators on your data
+    * [Dataset evaluators](/docs/phoenix/datasets-and-experiments/how-to-experiments/how-to-dataset-evaluators) — Attach evaluators to datasets so they run automatically during experiments
+    * [Evaluator integrations](/docs/phoenix/tracing/how-to-tracing/feedback-and-annotations/evaluating-phoenix-traces) — Use Phoenix evals, or bring your own from [Ragas](https://docs.ragas.io/), [Deepeval](https://github.com/confident-ai/deepeval), or [Cleanlab](https://cleanlab.ai/)
+    * [Human annotations](/docs/phoenix/tracing/llm-traces/how-to-annotate-traces) — Attach ground truth labels directly in the UI
+  </Tab>
+
+  <Tab title="Prompt Engineering" icon="wand-magic-sparkles">
+    <Frame caption="Phoenix Prompt Playground">
+      <video src="https://storage.googleapis.com/arize-phoenix-assets/assets/gifs/prompt_playground.mp4" width="100%" height="100%" style={{ display: 'block', objectFit: 'fill', backgroundColor: 'transparent' }} controls autoPlay muted loop />
+    </Frame>
+
+    Phoenix helps you [iterate on prompts](/docs/phoenix/prompt-engineering/overview-prompts) using real examples from your application. You can version prompts, test prompt variants across datasets, and replay calls to see how changes affect outputs before rolling them out.
+
+    * [Prompt Management](/docs/phoenix/prompt-engineering/overview-prompts/prompt-management) — Version, store, and deploy prompts
+    * [Prompt Playground](/docs/phoenix/prompt-engineering/overview-prompts/prompt-playground) — Experiment with prompts and models side-by-side
+    * [Span Replay](/docs/phoenix/prompt-engineering/overview-prompts/span-replay) — Debug by replaying LLM calls with different inputs
+    * [Prompts in Code](/docs/phoenix/prompt-engineering/overview-prompts/prompts-in-code) — Sync prompts across environments via SDK
+  </Tab>
+
+  <Tab title="Datasets & Experiments" icon="flask">
+    <Frame caption="Experiments in Phoenix">
+      <video src="https://storage.googleapis.com/arize-phoenix-assets/assets/gifs/experiments.mp4" width="100%" height="100%" style={{ display: 'block', objectFit: 'fill', backgroundColor: 'transparent' }} controls autoPlay muted loop />
+    </Frame>
+
+    [Datasets & Experiments](/docs/phoenix/datasets-and-experiments/overview-datasets) help you test changes systematically using the same inputs. You can group traces into datasets, rerun them through different versions of your application, and compare evaluation results to confirm whether a change actually improved performance.
+
+    * [Run Experiments](/docs/phoenix/datasets-and-experiments/how-to-experiments/run-experiments) — Compare different versions of your application
+    * [Create Datasets](/docs/phoenix/datasets-and-experiments/how-to-datasets) — Collect traces or upload from code/CSV
+    * [Dataset Evaluators](/docs/phoenix/datasets-and-experiments/how-to-experiments/how-to-dataset-evaluators) — Attach reusable evaluators to datasets as automated test cases
+    * [Test at Scale](/docs/phoenix/prompt-engineering/overview-prompts/prompt-playground) — Run datasets through Playground or export for fine-tuning
+  </Tab>
+</Tabs>
+
+## Quick Starts
+
+Running Phoenix for the first time? Select a quick start below.
+
+<CardGroup cols={2}>
+  <Card title="Send Traces From Your App" icon="telescope" href="/docs/phoenix/get-started/get-started-tracing">
+    See what's happening inside your LLM application with distributed tracing
+  </Card>
+
+  <Card title="Measure Performance with Evaluations" icon="clipboard-check" href="/docs/phoenix/get-started/get-started-evaluations">
+    Measure quality with LLM-as-a-judge and custom evaluators
+  </Card>
+
+  <Card title="Iterate on Your Prompts" icon="wand-magic-sparkles" href="/docs/phoenix/get-started/get-started-prompt-playground">
+    Experiment with prompts, compare models, and version your work
+  </Card>
+
+  <Card title="Optimize Your App with Experiments" icon="flask" href="/docs/phoenix/get-started/get-started-datasets-and-experiments">
+    Test your application systematically and track performance over time
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+The best next step is to start using Phoenix. Start with a quickstart to send data into Phoenix, then build from there. See the [Quickstart Overview](https://arize.com/docs/phoenix/get-started) for more information about what you'll build.
+
+## Other Resources
+
+<CardGroup cols={2}>
+  <Card title="Integrations" icon="puzzle-piece" href="/docs/phoenix/integrations">
+    Add instrumentation for OpenAI, LangChain, LlamaIndex, and more
+  </Card>
+
+  <Card title="Self-Host" icon="server" href="/docs/phoenix/environments">
+    Deploy Phoenix on Docker, Kubernetes, or your cloud of choice
+  </Card>
+
+  <Card title="Cookbooks" icon="book-open" href="/docs/phoenix/cookbook">
+    Example notebooks for tracing, evals, RAG analysis, and more
+  </Card>
+
+  <Card title="Community" icon="users" href="https://join.slack.com/t/arize-ai/shared_invite/zt-3r07iavnk-ammtATWSlF0pSrd1DsMW7g">
+    Join the Phoenix Slack to ask questions and connect with developers
+  </Card>
+</CardGroup>
+
+
+> ## Documentation Index
+> Fetch the complete documentation index at: https://arizeai-433a7140.mintlify.app/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Integrations
+
+> Connect Phoenix with your favorite AI frameworks, LLM providers, and tools
+
+<Frame>
+  <img src="https://storage.googleapis.com/arize-phoenix-assets/assets/images/phoenix-docs-images/integration-intro.jpg" />
+</Frame>
+
+Phoenix integrates with the leading AI frameworks, LLM providers, and tools to provide seamless observability, evaluation, and debugging for your AI applications. Whether you're building with Python, TypeScript, or Java, Phoenix has you covered.
+
+<Check>
+  Don't see an integration you need? We'd love to [hear from you!](https://github.com/Arize-ai/openinference/issues/new/choose)
+</Check>
+
+***
+
+## Integration Types
+
+Phoenix offers several types of integrations to support your AI development workflow:
+
+<CardGroup cols={2}>
+  <Card title="Developer Tools" icon="code" href="#developer-tools">
+    Integrate Phoenix with AI coding assistants like Claude Code and Cursor for debugging and analysis.
+  </Card>
+
+  <Card title="Tracing Integrations" icon="route" href="#tracing-integrations">
+    Automatically capture traces from your AI applications built with popular frameworks and LLM providers.
+  </Card>
+
+  <Card title="Eval Model Integrations" icon="brain" href="#eval-model-integrations">
+    Use any LLM provider to power Phoenix's evaluation capabilities for scoring and classifying your traces.
+  </Card>
+
+  <Card title="Eval Library Integrations" icon="clipboard-check" href="#eval-library-integrations">
+    Integrate with external evaluation libraries like Ragas, Cleanlab, and MLflow to visualize results in Phoenix.
+  </Card>
+
+  <Card title="Span Processors" icon="arrows-rotate" href="#span-processors">
+    Convert traces from other instrumentation libraries to the OpenInference format.
+  </Card>
+
+  <Card title="Sandboxes" icon="cube" href="#sandboxes">
+    Run code evaluators in hosted sandbox providers with kernel-level isolation.
+  </Card>
+</CardGroup>
+
+***
+
+## Developer Tools
+
+Integrate Phoenix with AI coding assistants to debug and analyze your LLM applications directly from your development environment.
+
+<CardGroup cols={2}>
+  <Card title="Coding Agents" icon="terminal" href="/docs/phoenix/integrations/developer-tools/coding-agents">
+    Install Phoenix debugging skills and CLI for Claude Code, Cursor, and other AI coding assistants.
+  </Card>
+
+  <Card title="Phoenix MCP Server" icon="plug" href="/docs/phoenix/integrations/phoenix-mcp-server">
+    Connect AI assistants directly to your Phoenix instance via the Model Context Protocol.
+  </Card>
+</CardGroup>
+
+***
+
+## Tracing Integrations
+
+Phoenix captures detailed traces from your AI applications, giving you visibility into every step of your LLM pipeline.
+
+### By Language
+
+<Tabs>
+  <Tab title="Python" icon="python">
+    <CardGroup cols={4}>
+      <Card title="OpenAI Agents SDK" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/phoenix-docs-images/ae376d63-image.avif" href="/docs/phoenix/integrations/llm-providers/openai/openai-agents-sdk-tracing" />
+
+      <Card title="LangChain" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/phoenix-docs-images/f1e5c9e9-image.avif" href="/docs/phoenix/integrations/python/langchain" />
+
+      <Card title="LlamaIndex" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/phoenix-docs-images/386f0e97-image.avif" href="/docs/phoenix/integrations/python/llamaindex" />
+
+      <Card title="LangGraph" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/phoenix-docs-images/f1e5c9e9-image.avif" href="/docs/phoenix/integrations/python/langgraph" />
+
+      <Card title="CrewAI" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/phoenix-docs-images/23915314-image.avif" href="/docs/phoenix/integrations/python/crewai" />
+
+      <Card title="AutoGen" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/phoenix-docs-images/1946e18f-image.avif" href="/docs/phoenix/integrations/python/autogen" />
+
+      <Card title="DSPy" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/phoenix-docs-images/b765e387-image.avif" href="/docs/phoenix/integrations/python/dspy" />
+
+      <Card title="Haystack" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/phoenix-docs-images/98eefc93-image.avif" href="/docs/phoenix/integrations/python/haystack" />
+
+      <Card title="Instructor" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/phoenix-docs-images/7756bbf9-image.jpeg" href="/docs/phoenix/integrations/python/instructor" />
+
+      <Card title="Guardrails AI" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/phoenix-docs-images/744e71c6-image.avif" href="/docs/phoenix/integrations/python/guardrails-ai" />
+
+      <Card title="Pydantic AI" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/pydantic-logo.png" href="/docs/phoenix/integrations/python/pydantic" />
+
+      <Card title="smolagents" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/phoenix-docs-images/7f44783b-image.avif" href="/docs/phoenix/integrations/python/hugging-face-smolagents" />
+
+      <Card title="Google ADK" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/phoenix-docs-images/7b413cbf-image.jpeg" href="/docs/phoenix/integrations/python/google-adk" />
+
+      <Card title="Agno" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/phoenix-docs-images/3daeeb35-image.jpeg" href="/docs/phoenix/integrations/python/agno" />
+
+      <Card title="BeeAI" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/phoenix-docs-images/9de53658-image.avif" href="/docs/phoenix/integrations/python/beeai" />
+
+      <Card title="Portkey" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/portkey-logo.png" href="/docs/phoenix/integrations/python/portkey" />
+
+      <Card title="Graphite" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/graphite-logo.png" href="/docs/phoenix/integrations/python/graphite" />
+
+      <Card title="NVIDIA" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/nvidia-logo.png" href="/docs/phoenix/integrations/python/nvidia" />
+
+      <Card title="MCP" href="/docs/phoenix/integrations/python/mcp-tracing" icon="plug" description="MCP tracing integration" />
+
+      <Card title="Agent Spec" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/agentspec-greyscale-logo.svg" href="/docs/phoenix/integrations/python/agentspec" />
+    </CardGroup>
+  </Tab>
+
+  <Tab title="TypeScript" icon="js">
+    <CardGroup cols={4}>
+      <Card title="Vercel AI SDK" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/phoenix-docs-images/73e15985-image.avif" href="/docs/phoenix/integrations/typescript/vercel" />
+
+      <Card title="LangChain.js" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/phoenix-docs-images/f1e5c9e9-image.avif" href="/docs/phoenix/integrations/typescript/langchain" />
+
+      <Card title="Mastra" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/phoenix-docs-images/b97976e8-image.jpeg" href="/docs/phoenix/integrations/typescript/mastra" />
+
+      <Card title="TanStack AI" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/tanstack-ai-integration.png" href="/docs/phoenix/integrations/typescript/tanstack-ai" />
+
+      <Card title="BeeAI" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/phoenix-docs-images/9de53658-image.avif" href="/docs/phoenix/integrations/typescript/beeai" />
+
+      <Card title="Claude Agent SDK" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/phoenix-docs-images/5d0ed01c-image.avif" href="/docs/phoenix/integrations/typescript/claude-agent-sdk" />
+
+      <Card title="MCP" href="/docs/phoenix/integrations/typescript/mcp" icon="plug" description="MCP tracing integration" />
+    </CardGroup>
+  </Tab>
+
+  <Tab title="Java" icon="java">
+    <CardGroup cols={4}>
+      <Card title="LangChain4j" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/phoenix-docs-images/f1e5c9e9-image.avif" href="/docs/phoenix/integrations/java/langchain4j" />
+
+      <Card title="Spring AI" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/spring-ai.png" href="/docs/phoenix/integrations/java/springai" />
+
+      <Card title="Arconia" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/phoenix-tracing.jpeg" href="/docs/phoenix/integrations/java/arconia" />
+    </CardGroup>
+  </Tab>
+</Tabs>
+
+### LLM Providers
+
+Phoenix provides native tracing support for all major LLM providers:
+
+<CardGroup cols={4}>
+  <Card title="OpenAI" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/phoenix-docs-images/ae376d63-image.avif" href="/docs/phoenix/integrations/llm-providers/openai" />
+
+  <Card title="Anthropic" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/phoenix-docs-images/5d0ed01c-image.avif" href="/docs/phoenix/integrations/llm-providers/anthropic" />
+
+  <Card title="Amazon Bedrock" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/phoenix-docs-images/db8ae712-image.avif" href="/docs/phoenix/integrations/llm-providers/amazon-bedrock" />
+
+  <Card title="Google" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/phoenix-docs-images/7b413cbf-image.jpeg" href="/docs/phoenix/integrations/llm-providers/google-gen-ai" />
+
+  <Card title="Groq" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/phoenix-docs-images/612c738c-image.avif" href="/docs/phoenix/integrations/llm-providers/groq" />
+
+  <Card title="MistralAI" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/phoenix-docs-images/808d1f26-image.avif" href="/docs/phoenix/integrations/llm-providers/mistralai" />
+
+  <Card title="VertexAI" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/phoenix-docs-images/9a7aa063-image.avif" href="/docs/phoenix/integrations/llm-providers/vertexai" />
+
+  <Card title="LiteLLM" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/phoenix-docs-images/a22c16d3-image.avif" href="/docs/phoenix/integrations/llm-providers/litellm" />
+
+  <Card title="OpenRouter" img="https://storage.googleapis.com/arize-assets/gitbook_openrouter.png" href="/docs/phoenix/integrations/llm-providers/openrouter" />
+</CardGroup>
+
+### Platforms
+
+Integrate Phoenix with AI development platforms and infrastructure:
+
+<CardGroup cols={3}>
+  <Card title="Dify" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/phoenix-docs-images/e30418d8-image.jpeg" href="/docs/phoenix/integrations/platforms/dify" />
+
+  <Card title="Flowise" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/phoenix-docs-images/603c5346-image.jpeg" href="/docs/phoenix/integrations/platforms/flowise" />
+
+  <Card title="LangFlow" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/phoenix-docs-images/af9de5c3-image.avif" href="/docs/phoenix/integrations/platforms/langflow" />
+
+  <Card title="Prompt Flow" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/phoenix-docs-images/693da124-image.avif" href="/docs/phoenix/integrations/platforms/prompt-flow" />
+
+  <Card title="Envoy AI Gateway" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/phoenix-tracing.jpeg" href="https://github.com/envoyproxy/ai-gateway/tree/main/cmd/aigw#opentelemetry-setup-with-phoenix" />
+
+  <Card title="LiteLLM Proxy" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/phoenix-docs-images/a22c16d3-image.avif" href="https://docs.litellm.ai/docs/observability/phoenix_integration#using-with-litellm-proxy" />
+</CardGroup>
+
+***
+
+## Eval Model Integrations
+
+Phoenix's evaluation library (`phoenix-evals`) can use any LLM provider to power evaluations. These models score, classify, and analyze your traces.
+
+<CardGroup cols={4}>
+  <Card title="OpenAI" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/phoenix-docs-images/ae376d63-image.avif" href="/docs/phoenix/integrations/llm-providers/openai/openai-evals" />
+
+  <Card title="Anthropic" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/phoenix-docs-images/5d0ed01c-image.avif" href="/docs/phoenix/integrations/llm-providers/anthropic/anthropic-evals" />
+
+  <Card title="Amazon Bedrock" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/phoenix-docs-images/db8ae712-image.avif" href="/docs/phoenix/integrations/llm-providers/amazon-bedrock/amazon-bedrock-evals" />
+
+  <Card title="Google Gemini" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/phoenix-docs-images/7b413cbf-image.jpeg" href="/docs/phoenix/integrations/llm-providers/google-gen-ai/gemini-evals" />
+
+  <Card title="VertexAI" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/phoenix-docs-images/9a7aa063-image.avif" href="/docs/phoenix/integrations/llm-providers/vertexai/vertexai-evals" />
+
+  <Card title="MistralAI" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/phoenix-docs-images/808d1f26-image.avif" href="/docs/phoenix/integrations/llm-providers/mistralai/mistralai-evals" />
+
+  <Card title="LiteLLM" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/phoenix-docs-images/a22c16d3-image.avif" href="/docs/phoenix/integrations/llm-providers/litellm/litellm-evals" />
+</CardGroup>
+
+***
+
+## Eval Library Integrations
+
+Use external evaluation libraries alongside Phoenix to get the best of both worlds:
+
+<CardGroup cols={4}>
+  <Card title="Ragas" href="/docs/phoenix/integrations/evaluation-integrations/ragas" icon="clipboard-check" description="RAG evaluation library" />
+
+  <Card title="Cleanlab" href="/docs/phoenix/integrations/evaluation-integrations/cleanlab" icon="check-circle" description="Model quality diagnostics" />
+
+  <Card title="Pydantic Evals" href="/docs/phoenix/integrations/python/pydantic/pydantic-evals" icon="code" description="Pydantic-based evals" />
+
+  <Card title="MLflow" href="/docs/phoenix/integrations/evaluation-integrations/mlflow" icon="chart-line" description="MLflow evaluation tracking" />
+</CardGroup>
+
+***
+
+## Span Processors
+
+Normalize and convert data from other instrumentation libraries by adding span processors that unify traces to the OpenInference format:
+
+<CardGroup cols={3}>
+  <Card title="OpenLIT" href="https://pypi.org/project/openinference-instrumentation-openlit/" icon="arrows-rotate" description="OpenLIT span processor" />
+
+  <Card title="OpenLLMetry (Traceloop)" href="https://pypi.org/project/openinference-instrumentation-openllmetry/" icon="arrows-rotate" description="OpenLLMetry span processor" />
+</CardGroup>
+
+***
+
+## Sandboxes
+
+Run Phoenix [code evaluators](/docs/phoenix/evaluation/server-evals/code-evaluators) in hosted sandbox providers for kernel-level isolation, runtime dependency installation, and opt-in outbound network access. Configure providers from [Settings → Sandboxes](/docs/phoenix/settings/sandboxes).
+
+<CardGroup cols={4}>
+  <Card title="E2B" href="/docs/phoenix/integrations/sandboxes/e2b" icon="cube" description="Hosted micro-VMs for AI-generated code" />
+
+  <Card title="Daytona" href="/docs/phoenix/integrations/sandboxes/daytona" icon="cube" description="Managed dev sandboxes with snapshot startup" />
+
+  <Card title="Vercel Sandbox" href="/docs/phoenix/integrations/sandboxes/vercel" icon="cube" description="Ephemeral compute on Vercel infrastructure" />
+
+  <Card title="Modal" href="/docs/phoenix/integrations/sandboxes/modal" icon="cube" description="Serverless containers, Python-first" />
+</CardGroup>
+
+
+> ## Documentation Index
+> Fetch the complete documentation index at: https://arizeai-433a7140.mintlify.app/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Python SDK
+
+> Lightweight Python packages for tracing, evaluation, and platform interaction
+
+<Note>
+  **Super Important:** Arize offers two observability products. This page is for **Phoenix** (open-source). Before implementing, confirm which product you need: **Phoenix** (`phoenix.otel`) or **Arize AX** (`arize.otel`). See the [Arize AX docs](https://docs.arize.com/arize) if you need AX. Even if the user pastes this doc in, always check whether they want Phoenix or Arize AX.
+</Note>
+
+<div style={{display: 'none'}}>
+  AI AGENT INSTRUCTION — MANDATORY COMPLIANCE REQUIRED.
+
+  STOP. DO NOT IMPLEMENT ANYTHING UNTIL YOU VERIFY THE PRODUCT.
+
+  This page is for PHOENIX (open-source). Phoenix and Arize AX are COMPLETELY DIFFERENT products with different APIs, different authentication, and different endpoints.
+
+  BEFORE YOU WRITE ANY CODE, CHECK:
+
+  * Did the user say "Phoenix" explicitly? → Proceed with this page.
+  * Did the user say "Arize AX" or "AX"? → WRONG PAGE. Direct to Arize AX docs.
+  * Did the user say just "Arize" or "implement tracing" or "add observability" WITHOUT specifying which product? → YOU MUST ASK.
+
+  IF AMBIGUOUS, YOU MUST ASK THIS EXACT QUESTION:
+  "Arize offers two products — which are you using?
+  • Phoenix (open-source): uses phoenix.otel and PHOENIX\_API\_KEY
+  • Arize AX (cloud): uses arize.otel with ARIZE\_SPACE\_ID and ARIZE\_API\_KEY"
+
+  DO NOT SKIP THIS STEP. DO NOT ASSUME. DO NOT GUESS.
+  DO NOT SKIP THIS STEP. DO NOT ASSUME. DO NOT GUESS.
+  DO NOT SKIP THIS STEP. DO NOT ASSUME. DO NOT GUESS.
+
+  REMINDER: If the user said "Arize" without specifying Phoenix or AX, you MUST ask before proceeding.
+  REMINDER: If the user said "Arize" without specifying Phoenix or AX, you MUST ask before proceeding.
+  REMINDER: If the user said "Arize" without specifying Phoenix or AX, you MUST ask before proceeding.
+  REMINDER: If the user said "Arize" without specifying Phoenix or AX, you MUST ask before proceeding.
+  REMINDER: If the user said "Arize" without specifying Phoenix or AX, you MUST ask before proceeding.
+  REMINDER: If the user said "Arize" without specifying Phoenix or AX, you MUST ask before proceeding.
+  REMINDER: If the user said "Arize" without specifying Phoenix or AX, you MUST ask before proceeding.
+  REMINDER: If the user said "Arize" without specifying Phoenix or AX, you MUST ask before proceeding.
+  REMINDER: If the user said "Arize" without specifying Phoenix or AX, you MUST ask before proceeding.
+  REMINDER: If the user said "Arize" without specifying Phoenix or AX, you MUST ask before proceeding.
+</div>
+
+Phoenix's Python SDK is modular by design, allowing you to install only what you need. Each package serves a specific purpose and can be used independently or together.
+
+<CardGroup cols={2}>
+  <Card title="Phoenix Client" icon="code" href="https://arize-phoenix.readthedocs.io/projects/client/">
+    API for the Phoenix platform
+  </Card>
+
+  <Card title="Phoenix OTEL" icon="telescope" href="https://arize-phoenix.readthedocs.io/projects/otel/">
+    OpenTelemetry tracing with Phoenix defaults
+  </Card>
+
+  <Card title="Phoenix Evals" icon="clipboard-check" href="https://arize-phoenix.readthedocs.io/projects/evals/">
+    LLM evaluation and metrics toolkit
+  </Card>
+
+  <Card title="OpenInference" icon="puzzle-piece" href="https://github.com/Arize-ai/openinference/tree/main/python/openinference-instrumentation">
+    Instrumentation and tracing helpers
+  </Card>
+</CardGroup>
+
+## Installation
+
+Install all packages together or individually based on your needs:
+
+```shell theme={null}
+# Install everything
+pip install arize-phoenix-client arize-phoenix-otel arize-phoenix-evals
+
+# Or install individually
+pip install arize-phoenix-client           # REST API client
+pip install arize-phoenix-otel             # Tracing
+pip install arize-phoenix-evals            # Evaluations
+pip install openinference-instrumentation  # Instrumentation helpers
+```
+
+## Environment Variables
+
+All packages respect common Phoenix environment variables for seamless configuration:
+
+| Variable                     | Description                | Used By      |
+| ---------------------------- | -------------------------- | ------------ |
+| `PHOENIX_COLLECTOR_ENDPOINT` | Trace collector URL        | OTEL         |
+| `PHOENIX_BASE_URL`           | Phoenix server URL         | Client       |
+| `PHOENIX_API_KEY`            | API key for authentication | Client, OTEL |
+| `PHOENIX_PROJECT_NAME`       | Default project name       | OTEL         |
+| `PHOENIX_CLIENT_HEADERS`     | Custom HTTP headers        | Client, OTEL |
+
+***
+
+## Phoenix Client
+
+[![PyPI Version](https://img.shields.io/pypi/v/arize-phoenix-client)](https://pypi.org/project/arize-phoenix-client/)
+
+The Phoenix Client provides a programmatic interface to the Phoenix platform via its REST API. Use it to manage datasets, run experiments, analyze traces, and collect feedback.
+
+* **Prompts** — Create, version, and invoke prompt templates with variable substitution
+* **Datasets** — Build evaluation datasets from DataFrames, CSV files, or dictionaries
+* **Experiments** — Run evaluations and track experiment results over time
+* **Spans** — Query and analyze traces with powerful filtering capabilities
+* **Annotations** — Add human feedback and automated evaluations to spans
+* **Projects** — Organize your work across multiple AI applications
+
+<CardGroup cols={2}>
+  <Card title="Usage Guide" icon="book" href="/docs/phoenix/sdk-api-reference/python/arize-phoenix-client">
+    Examples and getting started
+  </Card>
+
+  <Card title="API Reference" icon="arrow-up-right-from-square" href="https://arize-phoenix.readthedocs.io/projects/client/">
+    Full API documentation
+  </Card>
+</CardGroup>
+
+***
+
+## Phoenix OTEL
+
+[![PyPI Version](https://img.shields.io/pypi/v/arize-phoenix-otel)](https://pypi.org/project/arize-phoenix-otel/)
+
+Phoenix OTEL provides a lightweight wrapper around OpenTelemetry primitives with Phoenix-aware defaults. It simplifies tracing setup and provides decorators for common GenAI patterns.
+
+* **Zero-config tracing** — Enable `auto_instrument=True` to automatically trace AI libraries
+* **Phoenix-aware defaults** — Reads `PHOENIX_COLLECTOR_ENDPOINT`, `PHOENIX_API_KEY`, and other environment variables
+* **Production ready** — Built-in batching and authentication support
+* **Tracing decorators** — `@tracer.chain`, `@tracer.tool`, and more for manual instrumentation
+* **OpenTelemetry compatible** — Works with existing OTel infrastructure
+
+<CardGroup cols={2}>
+  <Card title="Usage Guide" icon="book" href="/docs/phoenix/sdk-api-reference/python/arize-phoenix-otel">
+    Examples and getting started
+  </Card>
+
+  <Card title="API Reference" icon="arrow-up-right-from-square" href="https://arize-phoenix.readthedocs.io/projects/otel/">
+    Full API documentation
+  </Card>
+</CardGroup>
+
+***
+
+## Phoenix Evals
+
+[![PyPI Version](https://img.shields.io/pypi/v/arize-phoenix-evals)](https://pypi.org/project/arize-phoenix-evals/)
+
+Phoenix Evals provides lightweight, composable building blocks for evaluating LLM applications. It includes tools for relevance scoring, faithfulness detection, toxicity checks, and custom metrics.
+
+* **Model adapters** — Works with OpenAI, LiteLLM, LangChain, and other providers
+* **Pre-built metrics** — Faithfulness detection, relevance, toxicity, and more
+* **Input mapping** — Powerful binding for complex data structures
+* **Native instrumentation** — OpenTelemetry tracing for observability
+* **High performance** — Up to 20x speedup with built-in concurrency and batching
+
+<CardGroup cols={2}>
+  <Card title="Usage Guide" icon="book" href="/docs/phoenix/sdk-api-reference/python/arize-phoenix-evals">
+    Examples and getting started
+  </Card>
+
+  <Card title="API Reference" icon="arrow-up-right-from-square" href="https://arize-phoenix.readthedocs.io/projects/evals/">
+    Full API documentation
+  </Card>
+</CardGroup>
+
+***
+
+## OpenInference
+
+[![PyPI Version](https://img.shields.io/pypi/v/openinference-instrumentation)](https://pypi.org/project/openinference-instrumentation/)
+
+OpenInference provides instrumentation utilities and helpers for tracing AI applications. Use it alongside Phoenix OTEL for decorators, context managers, and data masking capabilities.
+
+* **Decorators** — Use `@tracer.agent`, `@tracer.chain`, `@tracer.tool` to trace custom functions
+* **Context managers** — Wrap code blocks with `using_` helpers for fine-grained control
+* **Data masking** — Redact sensitive information from traces with built-in masking utilities
+* **Framework instrumentors** — Auto-trace OpenAI, LangChain, LlamaIndex, Anthropic, and more
+
+<CardGroup cols={2}>
+  <Card title="Usage Guide" icon="book" href="/docs/phoenix/sdk-api-reference/openinference-sdk/openinference-python">
+    Examples and getting started
+  </Card>
+
+  <Card title="GitHub" icon="arrow-up-right-from-square" href="https://github.com/Arize-ai/openinference/tree/main/python/openinference-instrumentation">
+    Source code and documentation
+  </Card>
+</CardGroup>
+
+
+> ## Documentation Index
+> Fetch the complete documentation index at: https://arizeai-433a7140.mintlify.app/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Getting Started
+
+[Phoenix Cloud](https://app.phoenix.arize.com/login) offers free, ready-to-use Phoenix instances preconfigured with 10 GiB of storage. These instances provide a convenient and quick way to get started. Phoenix Cloud supports multiple customizable spaces with individual user access and collaboration, enabling teams to work together seamlessly.
+
+<Steps>
+  <Step title={<span className="step-title">Log In & Create a Phoenix Space</span>}>
+    * Make a free Phoenix Cloud [account](https://app.arize.com/auth/phoenix/login).
+    * Click the **“Create a Space”** button located in the upper right-hand corner of the dashboard.
+    * Enter a name for your new space.
+    * After creating your space, launch your Phoenix instance.
+
+    <video src="https://storage.googleapis.com/arize-phoenix-assets/assets/videos/observe_phoenix_cloud_launch.mp4" width="100%" height="100%" style={{ display: 'block', objectFit: 'fill', backgroundColor: 'transparent' }} controls autoPlay muted loop />
+  </Step>
+
+  <Step title={<span className="step-title">Set Up Keys</span>}>
+    To create a new API key, go to the **API Keys** section within **Settings**. Click the **Add System Key** button, then provide a name for your API key. You may also include an optional description and set an expiration date if desired. All your API keys will be listed and manageable in this section.
+
+    ### System vs User API Keys
+
+    * System API keys represent the actions taken by the system as a whole
+
+    * User API keys represent the actions of a particular user. They are tied to lifespan of the user that created them.
+
+    <video src="https://storage.googleapis.com/arize-phoenix-assets/assets/gifs/api_key_hostname.mp4" width="100%" height="100%" style={{ display: 'block', objectFit: 'fill', backgroundColor: 'transparent' }} controls autoPlay muted loop />
+  </Step>
+
+  <Step title={<span className="step-title">Add Collaborators</span>}>
+    Phoenix Cloud supports team collaboration by allowing you to add members to your space. You can also assign roles to control access.
+
+    ### Roles
+
+    * **Admins** have full control over the space, including managing members, settings, system and user API keys, and roles.
+    * **Members** can access their own profile and manage their own user API keys
+
+    ### Adding Collaborators
+
+    On the Settings page, click the **Add User** button. Enter the user’s name, email address, and assign a role. The user will receive an email invitation to log in to the Phoenix instance.
+
+    <video src="https://storage.googleapis.com/arize-phoenix-assets/assets/gifs/adding_users.mp4" width="100%" height="100%" style={{ display: 'block', objectFit: 'fill', backgroundColor: 'transparent' }} controls autoPlay muted loop />
+  </Step>
+</Steps>
+
+
+> ## Documentation Index
+> Fetch the complete documentation index at: https://arizeai-433a7140.mintlify.app/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Cookbooks
+
+> Cookbooks & tutorials to help you build with Phoenix
+
+## Getting started with Phoenix
+
+Not sure where to start? Try an end-to-end tutorial for a guided walkthrough of Phoenix's core features. These tutorials cover tracing, evaluation, and experimentation:
+
+<Columns cols={2}>
+  <Card title="Python Walkthrough" href="/docs/phoenix/cookbook/ai-engineering-workflows/iterative-evaluation-and-experimentation-workflow-python" img="https://storage.googleapis.com/arize-assets/dev-rel/Image%20Assets%20Public/python-logo.png" />
+
+  <Card title="TypeScript Walkthrough" href="/docs/phoenix/cookbook/ai-engineering-workflows/iterative-evaluation-and-experimentation-workflow-typescript" img="https://storage.googleapis.com/arize-assets/dev-rel/Image%20Assets%20Public/ts-logo.png" />
+</Columns>
+
+## Featured AI Engineering Workflows
+
+Discover workflows that illustrate how teams use Phoenix to build, evaluate, and scale AI systems.
+
+<Columns cols={3}>
+  <Card title="Optimizing Coding Agent Prompts - Prompt Learning" href="/docs/phoenix/cookbook/prompt-engineering/optimizing-coding-agent-prompts-prompt-learning" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/optimizing-coding-agent-prompt.png" />
+
+  <Card title="Aligning LLM Evals with Human Feedback" href="/docs/phoenix/cookbook/human-in-the-loop-workflows-annotations/aligning-llm-evals-with-human-annotations-typescript" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/aligning-evals-with-feedback.png" />
+
+  <Card title="Write your First Custom LLM Eval" href="/docs/phoenix/cookbook/human-in-the-loop-workflows-annotations/creating-a-custom-llm-evaluator-with-a-benchmark-dataset" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/build-custom-eval.png" />
+</Columns>
+
+## Agent Demos
+
+These example agents are fully instrumented with OpenInference and utilize end-to-end tracing with Phoenix for comprehensive performance analysis. Enter your Phoenix and OpenAI keys to view traces.
+
+<Columns cols={3}>
+  <Card title="Code Generation Agent" href="https://phoenix-code-gen-agent.onrender.com/" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/agent-demos-code-gen.png">
+    Explore a Code Generator Copilot Agent designed to generate, optimize, and validate code.
+  </Card>
+
+  <Card title="RAG Agent" href="https://phoenix-rag-agent.onrender.com/" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/agent-demos-rag-agent.png">
+    Enter a source URL and collect traces in Phoenix to see how a RAG Agent can retrieve and generate accurate responses.
+  </Card>
+
+  <Card title="Computer Use Agent" href="https://github.com/Arize-ai/phoenix/tree/main/examples/computer_use_agent" img="https://storage.googleapis.com/arize-phoenix-assets/assets/images/agent-demos-computer-use.png">
+    Test out a Computer Use (Operator) Agent built to execute commands, edit files, and manage system operations.
+  </Card>
+</Columns>
+
+
+> ## Documentation Index
+> Fetch the complete documentation index at: https://arizeai-433a7140.mintlify.app/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# MCP Servers
+
+> Connect AI assistants to Phoenix documentation and platform capabilities via the Model Context Protocol (MCP).
+
+Phoenix provides two MCP servers for AI assistants:
+
+* **Phoenix Docs MCP** - Search Phoenix documentation in real-time
+* **Phoenix MCP Server** - Work directly with Phoenix projects, traces, sessions, prompts, datasets, experiments, and annotations
+
+***
+
+## Phoenix Docs MCP
+
+The Phoenix Docs MCP server allows AI assistants to search and retrieve Phoenix documentation in real-time.
+
+**Server URL:**
+
+```
+https://arizeai-433a7140.mintlify.app/mcp
+```
+
+### Connect with Claude Code
+
+```bash theme={null}
+# Project scope (current directory only)
+claude mcp add --transport http phoenix-docs https://arizeai-433a7140.mintlify.app/mcp
+```
+
+<Note>
+  To add the MCP server globally and access it in all projects, add the `--scope user` flag:
+
+  ```bash theme={null}
+  claude mcp add --transport http phoenix-docs --scope user https://arizeai-433a7140.mintlify.app/mcp
+  ```
+</Note>
+
+### Connect with Cursor or VS Code
+
+Add the following to your MCP settings configuration file:
+
+```json theme={null}
+{
+    "mcpServers": {
+        "phoenix-docs": {
+            "url": "https://arizeai-433a7140.mintlify.app/mcp"
+        }
+    }
+}
+```
+
+### Connect with Claude Desktop
+
+1. Open Claude Desktop
+2. Go to Settings > Connectors
+3. Add the MCP server URL: `https://arizeai-433a7140.mintlify.app/mcp`
+
+***
+
+## Phoenix MCP Server
+
+The Phoenix MCP Server (`@arizeai/phoenix-mcp`) connects AI assistants directly to your Phoenix instance for managing:
+
+* **Projects, Traces, and Spans**: Explore recent traces, inspect spans, and analyze annotations
+* **Sessions**: Review conversation flows and session annotations
+* **Annotation Configs**: Inspect the available labeling and scoring configs in Phoenix
+* **Prompts Management**: Create, list, update, and iterate on prompts
+* **Datasets**: Explore datasets and synthesize new examples
+* **Experiments**: Pull experiment results and visualize them with the help of an LLM
+
+### Connecting the Phoenix MCP Server
+
+<Tabs>
+  <Tab title="Connect via Cursor">
+    #### Via Cursor Deeplink:
+
+    [Add to Cursor](https://cursor.com/install-mcp?name=phoenix\&config=eyJjb21tYW5kIjoibnB4IC15IEBhcml6ZWFpL3Bob2VuaXgtbWNwQGxhdGVzdCAtLWJhc2VVcmwgaHR0cHM6Ly9hcHAucGhvZW5peC5hcml6ZS5jb20gLS1hcGlLZXkgIn0%3D)
+
+    #### Manually:
+
+    From the Cursor Settings page, navigate to the MCP section, and click "Add new global MCP server"
+
+    <Frame caption="">
+      <img src="https://storage.googleapis.com/arize-phoenix-assets/assets/images/phoenix-docs-images/74b71f79-image.jpeg" />
+    </Frame>
+
+    Add the following code to your MCP config file:
+
+    ```json theme={null}
+    {
+      "mcpServers": {
+        "phoenix": {
+          "command": "npx",
+          "args": [
+            "-y",
+            "@arizeai/phoenix-mcp@latest",
+            "--baseUrl",
+            "https://my-phoenix.com",
+            "--apiKey",
+            "your-api-key"
+          ]
+        }
+      }
+    ```
+
+    Replacing:
+
+    * [https://my-phoenix.com](https://my-phoenix.com) with your Phoenix collector endpoint
+
+    * `your-api-key` with your Phoenix API key
+
+    After saving your config file, you should see the Phoenix server enabled:
+
+    <Frame caption="">
+      <img src="https://storage.googleapis.com/arize-phoenix-assets/assets/images/phoenix-docs-images/1b54b88b-image.jpeg" />
+    </Frame>
+
+    You can access Phoenix prompts, experiments, and datasets through Cursor!
+  </Tab>
+
+  <Tab title="Connect via Claude Desktop">
+    From the Claude Desktop settings window, navigate to the Developer Section, and click "Edit Config"
+
+    <Frame caption="">
+      <img src="https://storage.googleapis.com/arize-phoenix-assets/assets/images/phoenix-docs-images/50506436-image.jpeg" />
+    </Frame>
+
+    Open your config file and add the following code:
+
+    ```json theme={null}
+    {
+      "mcpServers": {
+        "phoenix": {
+          "command": "npx",
+          "args": [
+            "-y",
+            "@arizeai/phoenix-mcp@latest",
+            "--baseUrl",
+            "https://my-phoenix.com",
+            "--apiKey",
+            "your-api-key"
+          ]
+        }
+      }
+    ```
+
+    Replacing:
+
+    * [https://my-phoenix.com](https://my-phoenix.com) with your Phoenix collector endpoint
+
+    * `your-api-key` with your Phoenix API key
+
+    Save your file and relaunch Claude Desktop. You should now see your new tools ready for use in Claude!
+
+    <Frame caption="">
+      <img src="https://storage.googleapis.com/arize-phoenix-assets/assets/images/phoenix-docs-images/3fb7e0c6-image.jpeg" />
+    </Frame>
+  </Tab>
+
+  <Tab title="Manually Connect">
+    Add the following code to your MCP config file:
+
+    ```json theme={null}
+    {
+      "mcpServers": {
+        "phoenix": {
+          "command": "npx",
+          "args": [
+            "-y",
+            "@arizeai/phoenix-mcp@latest",
+            "--baseUrl",
+            "https://my-phoenix.com",
+            "--apiKey",
+            "your-api-key"
+          ]
+        }
+      }
+    ```
+
+    Replacing:
+
+    * [https://my-phoenix.com](https://my-phoenix.com) with your Phoenix collector endpoint
+
+    * `your-api-key` with your Phoenix API key
+  </Tab>
+
+  <Tab title="Connect via Claude Code CLI">
+    ```bash theme={null}
+    claude mcp add phoenix -- npx -y @arizeai/phoenix-mcp@latest \
+    --baseUrl https://my-phoenix.com \
+    --apiKey your-api-key
+    ```
+
+    Replacing:
+
+    * [https://my-phoenix.com](https://my-phoenix.com) with your Phoenix collector endpoint ([https://app.phoenix.arize.com](https://app.phoenix.arize.com) default for Phoenix Cloud)&#x20;
+    * `your-api-key` with your Phoenix API key
+
+    After installation, restart your Claude Code CLI session to start using the Phoenix MCP tools.
+  </Tab>
+</Tabs>
+
+### Using the Phoenix MCP Server
+
+The MCP server can be used to interact with projects, traces, spans, sessions, annotation configs, prompts, experiments, and datasets. It can retrieve operational data, inspect prompt and experiment artifacts, and perform the existing prompt and dataset write flows.
+
+Some good questions to try:
+
+1. `Show me the latest traces in my default Phoenix project`
+
+2. `Show me the last 10 sessions in my support-agent project`
+
+3. `What annotation configs do I have in Phoenix?`
+
+4. `What prompts do I have in Phoenix?`
+
+5. `Create a new prompt in Phoenix that classifies user intent`
+
+6. `Summarize the Phoenix experiments run on my agent inputs dataset`
+
+7. `Visualize the results of my jailbreak dataset experiments in Phoenix`
+
+### Hoping to see additional functionality?
+
+`@arizeai/phoenix-mcp` is [open-source](https://github.com/Arize-ai/phoenix)! Issues and PRs welcome.
+
+<Card
+  horizontal
+  icon="github"
+  href="https://github.com/Arize-ai/phoenix/tree/main/js/packages/phoenix-mcp"
+  title="Not found
+"
+  description="phoenix-mcp package repository"
+/>
+> ## Documentation Index
+> Fetch the complete documentation index at: https://arizeai-433a7140.mintlify.app/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Run Evals With Built-In Eval Templates
+
+This guide is part of a sequence: it starts with built-in eval templates, then moves to customizing the judge model, then to defining your own evaluation criteria. Here you configure a judge model, select a pre-built evaluation, and run it on real data—specifically, data derived from Phoenix traces.
+
+The goal is to go from traced application executions to structured quality signals that can be inspected, compared, and logged back to Phoenix. This guide assumes you already have tracing in place and focuses on using evals to measure correctness and behavior.
+
+At its core, an LLM-as-a-judge evaluation combines three things:
+
+1. The judge model: the LLM that produces the judgment
+
+2. A prompt template or rubric: the criteria used to make that judgment
+
+3. Your data: the examples being evaluated
+
+Once you’ve defined what you want to evaluate and selected the data to run on, the next step is configuring the judge model. The choice of model and its invocation settings directly affect how criteria are interpreted and how consistent evaluation results are.
+
+This guide walks through how to configure a judge model and run built-in eval templates using Phoenix Evals.
+
+Follow along with the following code assets:
+
+<Columns cols={2}>
+  <Card title="Python Tutorial" icon="python" href="https://github.com/Arize-ai/phoenix/blob/main/tutorials/quickstarts/agno_agent_for_evals.ipynb">
+    Companion Python project with runnable examples
+  </Card>
+
+  <Card title="TypeScript Tutorial" icon="js" href="https://github.com/Arize-ai/phoenix/tree/main/js/examples/apps/langchain-quickstart">
+    Companion TypeScript project with runnable examples
+  </Card>
+</Columns>
+
+***
+
+## Configure Core LLM Setup
+
+Evals need an LLM to act as the judge—the model that applies the rubric to your data. Configuring that judge is the first step. Phoenix Evals is provider-agnostic. You can run evaluations using any supported LLM provider without changing how your evaluators are written.
+
+Across both the Python and TypeScript evals libraries, a judge model is represented as a reusable configuration object. This object describes how Phoenix connects to a model provider, including the provider name, model identifier, credentials, and any SDK-specific client configuration.
+
+Invocation behavior (temperature, token limits, or other generation controls) is configured separately on the evaluator. This separation makes it possible to reuse the same judge model across multiple evals while tuning behavior per evaluation.
+
+The example below illustrates this separation by configuring a judge model independently of any specific evaluator:
+
+<Tabs>
+  <Tab title="Python">
+    ```python theme={null}
+    from phoenix.evals.llm import LLM
+
+    llm = LLM(
+        provider="openai",
+        model="gpt-4o",
+        client="openai",
+    )
+    ```
+  </Tab>
+
+  <Tab title="TypeScript">
+    ```typescript theme={null}
+    import { openai } from "@ai-sdk/openai";
+
+    const base_model = openai("gpt-4o-mini");
+    ```
+  </Tab>
+</Tabs>
+
+In practice, this means you can adjust how a model is called for one eval without affecting others, while keeping provider configuration centralized. For all supported providers and configuration options, see [Configuring the LLM](/docs/phoenix/evaluation/how-to-evals/configuring-the-llm).
+
+## Built-In Eval Templates in Phoenix
+
+Phoenix includes a set of built-in eval templates that cover common evaluation tasks such as relevance, correctness, faithfulness, summarization quality, and toxicity. These templates encode a predefined rubric, structured outputs, and defaults that work well for LLM-as-a-judge workflows.
+
+You can find all [built in templates](https://arize.com/docs/phoenix/evaluation/pre-built-metrics) here.
+
+Built-in templates are a good choice when you want reliable signal quickly without designing a rubric from scratch, especially early in iteration or when establishing a baseline.
+
+The example below shows a minimal setup using the built-in Correctness eval template with a configured judge model:
+
+<Tabs>
+  <Tab title="Python">
+    ```python theme={null}
+    from phoenix.evals.metrics import CorrectnessEvaluator
+
+    correctness_eval = CorrectnessEvaluator(llm=llm)
+    print(correctness_eval.describe())
+    ```
+  </Tab>
+
+  <Tab title="TypeScript">
+    ```typescript theme={null}
+    import { createCorrectnessEvaluator } from "@arizeai/phoenix-evals";
+
+    const evaluator = createCorrectnessEvaluator({
+      model: base_model as any,
+    });
+    ```
+  </Tab>
+</Tabs>
+
+Once defined, built-in evaluators can be run on tabular data or trace-derived examples and logged back to Phoenix like any other eval. Because they return structured outputs, results can be compared across runs and combined with other evaluations.
+
+## Running Evals on Phoenix Traces
+
+With a judge model and evaluator defined, the next step is running evals on real application data. A common workflow is evaluating traced executions and attaching results back to spans in Phoenix. Once attached, you can inspect failures and edge cases in the UI, compare behavior across runs, and use eval results as inputs to datasets and experiments.
+
+**1. Export trace spans**
+
+Start by exporting spans from a Phoenix project into a tabular structure:
+
+<Tabs>
+  <Tab title="Python">
+    ```python theme={null}
+    from phoenix.client import Client
+
+    client = Client()
+    spans_df = client.spans.get_spans_dataframe(project_identifier="agno_travel_agent")
+    agent_spans = spans_df[spans_df['span_kind'] == 'AGENT']
+    agent_spans
+    ```
+  </Tab>
+
+  <Tab title="TypeScript">
+    ```typescript theme={null}
+    import { getSpans } from "@arizeai/phoenix-client/spans";
+
+    const projectName =
+      process.env.PHOENIX_PROJECT_NAME || "langchain-travel-agent";
+    const { spans } = await getSpans({ project: { projectName }, limit: 500 });
+    ```
+  </Tab>
+</Tabs>
+
+Each row represents a span and includes identifiers and attributes captured during execution.
+
+**2. Prepare Evaluator Inputs**
+Next, select or transform fields from the exported spans so they match the evaluator’s expected inputs. This often involves extracting nested attributes such as:
+
+Ex. `attributes.input.value` & `attributes.output.value`
+
+Input mappings help bridge differences between how data is stored in traces and what evaluators expect.
+
+<Tabs>
+  <Tab title="Python">
+    ```python theme={null}
+    from phoenix.evals import bind_evaluator
+
+    bound_evaluator = bind_evaluator(
+        evaluator=correctness_eval,
+        input_mapping={
+            "input": "attributes.input.value",
+            "output": "attributes.output.value",
+        }
+    )
+    ```
+  </Tab>
+
+  <Tab title="TypeScript">
+    We may need to manipulate the data a little bit here to make it easier to pass into the evaluator. We can first define some helper functions.
+
+    ```typescript theme={null}
+    const toStr = (v: unknown) =>
+    typeof v === "string" ? v : v != null ? JSON.stringify(v) : null;
+
+    function getInputOutput(span: any) {
+      const attrs = span.attributes ?? {};
+      const input = toStr(attrs["input.value"] ?? attrs["input"]);
+      const output = toStr(attrs["output.value"] ?? attrs["output"]);
+      return { input, output };
+    }
+
+    const parentSpans: { spanId: string; input: string; output: string }[] = [];
+    for (const s of spans) {
+      const name = (s as any).name ?? (s as any).span_name;
+      if (name !== "LangGraph") continue;
+      const { input, output } = getInputOutput(s);
+      const spanId =
+        (s as any).context?.span_id ?? (s as any).span_id ?? (s as any).id;
+      if (input && output && spanId) {
+        parentSpans.push({ spanId: String(spanId), input, output });
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+**3. Run evals on the prepared data**
+
+Once the evaluation dataframe is prepared, you can run evals in batch using the same APIs used for any tabular data.
+
+<Tabs>
+  <Tab title="Python">
+    ```python theme={null}
+    from phoenix.evals import async_evaluate_dataframe
+    from phoenix.trace import suppress_tracing
+    with suppress_tracing():
+      results_df = await async_evaluate_dataframe(agent_spans, [bound_evaluator], concurrency=10)
+    ```
+  </Tab>
+
+  <Tab title="TypeScript">
+    ```typescript theme={null}
+    const spanAnnotations = await Promise.all(
+      parentSpans.map(async ({ spanId, input, output }) => {
+        const r = await evaluator.evaluate({ input, output });
+        console.log(r.explanation);
+        return {
+          spanId,
+          name: "correctness" as const,
+          label: r.label,
+          score: r.score,
+          explanation: r.explanation ?? undefined,
+          annotatorKind: "LLM" as const,
+          metadata: { evaluator: "correctness", input, output },
+        };
+      }),
+    );
+    ```
+  </Tab>
+</Tabs>
+
+**4. Log results back to Phoenix**
+
+Finally, log evaluation results back to Phoenix as span annotations. Phoenix uses span identifiers to associate eval outputs with the correct execution.
+
+<Tabs>
+  <Tab title="Python">
+    ```python theme={null}
+    from phoenix.evals.utils import to_annotation_dataframe
+
+    evaluations = to_annotation_dataframe(dataframe=results_df)
+    Client().spans.log_span_annotations_dataframe(dataframe=evaluations)
+    ```
+  </Tab>
+
+  <Tab title="TypeScript">
+    ```typescript theme={null}
+    import { logSpanAnnotations } from "@arizeai/phoenix-client/spans";
+
+    await logSpanAnnotations({ spanAnnotations, sync: true });
+    ```
+  </Tab>
+</Tabs>
+
+Once logged, eval results appear alongside traces in the Phoenix UI, making it possible to analyze execution behavior and quality together.
+
+***
+
+With built-in evals running on traced data, you can now:
+
+* Inspect failures and edge cases
+
+* Compare behavior across runs
+
+* Use eval results as inputs to datasets and experiments
+
+This completes the core loop from tracing → evaluation → analysis.
+
+## What’s Next
+
+At this point, you’ve seen how to run evaluations using Phoenix’s built-in eval templates and attach quality signals to real application executions. This provides a fast way to measure behavior and establish baselines using predefined criteria.
+
+In the next guides, we’ll build on this foundation by customizing different parts of the evaluation workflow. Specifically, the next page walks through how to define a custom LLM judge, including how to configure model behavior and connect to different providers or endpoints. From there, we’ll move into customizing evaluation templates and defining application-specific criteria.
+
+Together, these guides show how to move from out-of-the-box evaluations to fully customized evals tailored to your application.
+
+> ## Documentation Index
+> Fetch the complete documentation index at: https://arizeai-433a7140.mintlify.app/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Tracing Tutorial
+
+> Build a fully observable AI agent from scratch - trace every operation, measure quality, and debug conversations
+
+AI applications are fundamentally different from traditional software. A REST API returns the same response for the same input. An LLM-powered agent reasons, retrieves, calls tools, and generates - with each step influenced by probabilities, context, and the interactions between components. When something goes wrong, the failure could be anywhere in that chain.
+
+**Observability** is the practice of instrumenting your application so you can understand its internal state from its external outputs. For AI applications, this means capturing every LLM call, tool execution, retrieval operation, and generation - along with their inputs, outputs, latency, and token usage. With proper observability, you don't guess why something failed. You look at the data and see exactly what happened.
+
+Phoenix provides the infrastructure for AI observability: **tracing** to capture execution flow, **annotations** to measure quality, and **sessions** to track conversations. In this tutorial, you'll learn to use all three by building a real application.
+
+# What You'll Build
+
+A typescript customer support agent that handles two types of queries:
+
+* **Order status questions** → Calls a tool to look up order information
+* **FAQ questions** → Searches a knowledge base using RAG
+
+The agent classifies incoming queries, routes them to the right handler, and generates helpful responses. It also handles multi-turn conversations, remembering context across turns.
+
+As you build each feature, you'll add the corresponding observability layer - so you can see exactly how classification decisions are made, why certain documents are retrieved, and whether conversations maintain context across turns.
+
+### Follow along with Complete Code Walkthroughs
+
+<Columns cols={2}>
+  <Card title="TypeScript Tutorial" icon="js" href="https://github.com/Arize-ai/phoenix/tree/main/js/examples/apps/tracing-tutorial">
+    Companion TypeScript project with runnable examples
+  </Card>
+
+  <Card title="Python Tutorial" icon="python" href="https://colab.research.google.com/github/Arize-ai/phoenix/blob/main/tutorials/tracing/python_tracing_quickstart.ipynb">
+    Companion Python project with runnable examples
+  </Card>
+</Columns>
+
+# Chapter 1: Your First Traces
+
+**The problem**: Your agent is a black box. When something goes wrong, you add `console.log` statements, re-run, and hope you logged the right thing.
+
+**What you'll learn**:
+
+* Instrument your agent with OpenTelemetry in 5 minutes
+* Trace LLM calls, tool executions, and RAG retrievals automatically
+* Group related operations under parent spans for complete request context
+* Navigate the Phoenix UI to explore traces
+
+**The payoff**: Click on any request and see the complete execution flow. The classification said "faq" when it should have said "order\_status"? You'll see it. The retrieval returned irrelevant documents? It's right there. No more guessing.
+
+[**Start Chapter 1 →**](/docs/phoenix/tracing/tutorial/your-first-traces)
+
+# Chapter 2: Annotations and Evaluation
+
+**The problem**: You can see what's happening, but you can't tell if responses are actually *good*. A trace showing "200 OK" doesn't mean the answer was right.
+
+**What you'll learn**:
+
+* Annotate traces with human feedback directly in the Phoenix UI
+* Capture user reactions (thumbs up/down) from your application and attach them to traces
+* Build LLM-as-Judge evaluators that automatically assess quality
+* Find patterns in what's failing across hundreds of traces
+
+**The payoff**: Instead of manually reviewing every response, you get aggregate metrics. "23% of FAQ queries have irrelevant retrieval." "Tool calls fail when the order ID format is wrong." You know what to fix, and you have the data to prove it worked.
+
+[**Start Chapter 2 →**](/docs/phoenix/tracing/tutorial/annotations-and-evaluations)
+
+# Chapter 3: Sessions
+
+**The problem**: Your agent handles single queries fine, but real users have conversations. "What's my order status?" → "When will it arrive?" → "Can I change the address?" Without sessions, each query is isolated - you can't see if the agent remembered the order ID from the first turn.
+
+**What you'll learn**:
+
+* Add session tracking to group conversation turns together
+* View conversations as chat-like threads in Phoenix
+* Evaluate entire conversations for coherence and resolution
+* Debug "the bot forgot what I said" issues by seeing exactly where context was lost
+
+**The payoff**: You'll know that "17% of sessions longer than 4 turns show context loss" and be able to click directly into those sessions to see what went wrong. Conversation quality becomes measurable.
+
+[**Start Chapter 3 →**](/docs/phoenix/tracing/tutorial/sessions)
+
+# Prerequisites
+
+* Access to [Phoenix Cloud](https://arize.com/docs/phoenix/phoenix-cloud) or **Phoenix running locally** (`pip install arize-phoenix && phoenix serve`)
+* **OpenAI API key** for LLM calls
+
+# Let's Get Started
+
+By the end of this tutorial, you'll have a working agent with complete observability - the same patterns used by teams running AI applications in production. The specific tools and evaluators will vary for your use case, but the approach stays the same: trace everything, measure what matters, and use the data to improve.
+
+[**Start with Chapter 1: Your First Traces →**](/docs/phoenix/tracing/tutorial/your-first-traces)
+
