@@ -19,6 +19,8 @@ steps:
       - '--region'
       - 'us-central1'
       - '--allow-unauthenticated'
+      - '--set-env-vars'
+      - 'GOOGLE_AGENT_PLATFORM_API_KEY=$_GOOGLE_AGENT_PLATFORM_API_KEY,PHOENIX_API_KEY=$_PHOENIX_API_KEY,GCP_PROJECT_ID=$PROJECT_ID'
 
 images:
   - 'gcr.io/$PROJECT_ID/aerocaliper'
