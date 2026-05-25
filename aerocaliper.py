@@ -1,4 +1,5 @@
 import os
+import hashlib
 # Prevent Header format invalid warnings from OpenTelemetry / Phoenix in parent process
 if "PHOENIX_CLIENT_HEADERS" in os.environ:
     headers_val = os.environ["PHOENIX_CLIENT_HEADERS"]
@@ -272,7 +273,7 @@ class AeroCaliperAgent:
                         self._emit("phase_update", {"phase": 4, "status": "active"})
                         candidate_prompt = args.get("candidate_prompt", "")
                         final_prompt = candidate_prompt
-                        thought_sig = f"sig_v4_{hash(candidate_prompt) & 0xFFFFFF:06x}"
+                        thought_sig = f"sig_v4_{hashlib.sha256(candidate_prompt.encode('utf-8')).hexdigest()[:6]}"
                         
                         self._emit("thought_signature", {
                             "token": thought_sig,
