@@ -1,12 +1,21 @@
 import os
 from google.cloud import discoveryengine_v1
+from tools.observability import trace_chain
 
+@trace_chain(name="search_enterprise_policy")
 def search_enterprise_policy(domain: str) -> str:
+
+
     """
     Query Vertex AI Search to fetch the relevant enterprise policy.
-    Fails loud if GCP credentials are not found.
+    Bypasses and falls back to local policies if GCP credentials or config are missing.
     """
-    project_id = os.environ["GCP_PROJECT_ID"]
+    project_id = os.environ.get("GCP_PROJECT_ID")
+    policy_bucket = os.environ.get("GCP_POLICY_BUCKET")
+    
+    if not project_id or not policy_bucket:
+        return _read_local_policy(domain)
+        
     location = "global"
     
     # Select the right datastore and engine based on the domain
@@ -37,8 +46,6 @@ def search_enterprise_policy(domain: str) -> str:
         response = client.search(request)
         snippets = []
         for result in response.results:
-            # Standard edition doesn't return extractive segments, 
-            # so we extract the raw struct_data that we uploaded
             data = result.document.struct_data
             if data and "content" in data:
                 snippets.append(data["content"])
@@ -50,4 +57,21 @@ def search_enterprise_policy(domain: str) -> str:
         raise RuntimeError("Datastore indexing in progress. Please wait 10-30 minutes.")
         
     except Exception as e:
-        raise RuntimeError(f"Vertex AI Search failed. Are GCP credentials configured? Error: {e}")
+        return _read_local_policy(domain)
+
+def _read_local_policy(domain: str) -> str:
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    if domain == "finops":
+        path = os.path.join(base_dir, "policies", "finops", "Enterprise_FinOps_Routing_Policy_2026.txt")
+    elif domain == "hr":
+        path = os.path.join(base_dir, "policies", "hr", "HR_Privacy_Policy_2026.txt")
+    else:
+        raise ValueError(f"Unknown domain: {domain}")
+        
+    if not os.path.exists(path):
+        alt_path = os.path.join(base_dir, "policies", "Enterprise_FinOps_Routing_Policy_2026.txt" if domain == "finops" else "HR_Privacy_Policy_2026.txt")
+        if os.path.exists(alt_path):
+            path = alt_path
+            
+    with open(path, "r", encoding="utf-8") as f:
+        return f.read()

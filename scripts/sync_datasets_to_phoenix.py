@@ -15,18 +15,41 @@ def sync_datasets():
         print(f"Error reading golden_dataset.csv: {e}")
         return
 
-    # Split into finops and hr datasets for cleaner organization in Phoenix
-    finops_keywords = ["cluster", "batch", "gpu", "kubernetes"]
-    hr_keywords = ["pii", "salary", "contractor", "draft", "payroll", "offer letter", "health", "hr"]
-    
-    def determine_domain(prompt):
-        prompt = str(prompt).lower()
-        if any(kw in prompt for kw in hr_keywords):
-            return "hr"
-        return "finops"
+    # Dynamically support both old and new schemas
+    if "input_text" in df.columns:
+        df["llm.user_prompt"] = df["input_text"]
+    if "use_case" in df.columns:
+        df["domain"] = df["use_case"]
+    else:
+        # Split into finops and hr datasets for cleaner organization in Phoenix
+        finops_keywords = ["cluster", "batch", "gpu", "kubernetes"]
+        hr_keywords = ["pii", "salary", "contractor", "draft", "payroll", "offer letter", "health", "hr"]
         
-    df["domain"] = df["llm.user_prompt"].apply(determine_domain)
-    
+        def determine_domain(prompt):
+            prompt = str(prompt).lower()
+            if any(kw in prompt for kw in hr_keywords):
+                return "hr"
+            return "finops"
+            
+        df["domain"] = df["llm.user_prompt"].apply(determine_domain)
+
+    # Ensure evaluation columns exist
+    if "evaluation_result" not in df.columns:
+        if "expected_compliance_flag" in df.columns:
+            # Map expected_compliance_flag (True means passed/compliant, False means failed/violating)
+            df["evaluation_result"] = df["expected_compliance_flag"].apply(lambda x: "PASSED" if str(x).lower() in ("true", "1", "passed", "compliant") else "FAILED")
+        else:
+            df["evaluation_result"] = "PASSED"
+
+    if "evaluation_detail" not in df.columns:
+        df["evaluation_detail"] = df["domain"] + " compliance check"
+
+    if "trace_id" not in df.columns:
+        df["trace_id"] = df["prompt_id"] if "prompt_id" in df.columns else "trace-" + df.index.astype(str)
+
+    if "span_id" not in df.columns:
+        df["span_id"] = "span-" + df.index.astype(str)
+        
     finops_df = df[df["domain"] == "finops"].copy()
     hr_df = df[df["domain"] == "hr"].copy()
     

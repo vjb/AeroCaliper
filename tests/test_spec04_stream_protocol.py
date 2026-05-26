@@ -17,8 +17,9 @@ import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-CLOUD_RUN_URL = "https://aerocaliper-agent-622472185650.us-central1.run.app"
+CLOUD_RUN_URL = os.getenv("CLOUD_RUN_URL", "https://aerocaliper-agent-mg7mo672qa-uc.a.run.app")
 STREAM_URL = f"{CLOUD_RUN_URL}/remediate/stream"
+
 
 
 class TestStreamProtocol:

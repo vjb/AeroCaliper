@@ -2,16 +2,22 @@ import csv
 import json
 import google.genai
 import os
+import asyncio
 from dotenv import load_dotenv
 from evaluators import evaluate_finops_compliance, evaluate_hr_compliance
+from tools.observability import trace_chain
 
 load_dotenv()
 
+@trace_chain(name="run_empirical_backtest")
 def run_empirical_backtest(candidate_prompt: str, domain: str) -> str:
     """
     Run the empirical backtest against the golden dataset using the candidate system prompt.
     Returns the results of the evaluation, including any failed test cases.
     """
+    if not candidate_prompt or len(candidate_prompt.strip()) < 150:
+        return "FAIL: Candidate prompt is too short. It must retain the original agent's full persona and instructions."
+
     # Load dataset locally as fallback
     try:
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -26,7 +32,13 @@ def run_empirical_backtest(candidate_prompt: str, domain: str) -> str:
     
     # Filter the dataset based on the active policy domain
     for row in test_cases:
-        is_hr_case = any(x in row.get("evaluation_detail", "").lower() or x in row.get("llm.user_prompt", "").lower() for x in ["pii", "salary", "contractor", "draft", "payroll", "offer letter", "health", "hr"])
+        user_prompt = row.get("input_text") or row.get("llm.user_prompt") or ""
+        eval_detail = row.get("use_case") or row.get("evaluation_detail") or ""
+        if "use_case" in row and row["use_case"]:
+            is_hr_case = (row["use_case"] == "hr")
+        else:
+            is_hr_case = any(x in eval_detail.lower() or x in user_prompt.lower() for x in ["pii", "salary", "contractor", "draft", "payroll", "offer letter", "health", "hr"])
+            
         if (domain == "hr" and not is_hr_case) or (domain == "finops" and is_hr_case):
             continue
         filtered_cases.append(row)
@@ -37,7 +49,8 @@ def run_empirical_backtest(candidate_prompt: str, domain: str) -> str:
     passed_cases = 0
     failed_cases_info = []
 
-    client = google.genai.Client(vertexai=True, api_key=os.environ.get("GOOGLE_AGENT_PLATFORM_API_KEY"))
+    api_key = os.environ.get("GOOGLE_AGENT_PLATFORM_API_KEY") or os.environ.get("GEMINI_API_KEY")
+    client = google.genai.Client(vertexai=True, api_key=api_key)
 
     # Optional: Try to run via Phoenix Experiments for hackathon UI points
     try:
@@ -77,7 +90,8 @@ def run_empirical_backtest(candidate_prompt: str, domain: str) -> str:
     # Run Local Evaluation Loop in Parallel
     async def evaluate_all():
         async def evaluate_one(row):
-            test_request = f"System Instructions: {candidate_prompt}\n\nUser Request: {row['llm.user_prompt']}\n\nReturn ONLY valid JSON."
+            user_prompt = row.get("input_text") or row.get("llm.user_prompt") or ""
+            test_request = f"System Instructions: {candidate_prompt}\n\nUser Request: {user_prompt}\n\nReturn ONLY valid JSON."
             try:
                 # Use client.aio for async content generation
                 response = await client.aio.models.generate_content(
@@ -91,9 +105,9 @@ def run_empirical_backtest(candidate_prompt: str, domain: str) -> str:
                     res = evaluate_hr_compliance(payload)
                 else:
                     res = evaluate_finops_compliance(payload)
-                return row['llm.user_prompt'], res, simulation_output
+                return user_prompt, res, simulation_output
             except Exception as e:
-                return row['llm.user_prompt'], f"Simulation parse/run error: {e}", "No valid JSON output"
+                return user_prompt, f"Simulation parse/run error: {e}", "No valid JSON output"
 
         tasks = [evaluate_one(row) for row in filtered_cases]
         return await asyncio.gather(*tasks)
@@ -124,7 +138,8 @@ def run_empirical_backtest(candidate_prompt: str, domain: str) -> str:
         # Fallback to sync sequential loop if loop fails
         results = []
         for row in filtered_cases:
-            test_request = f"System Instructions: {candidate_prompt}\n\nUser Request: {row['llm.user_prompt']}\n\nReturn ONLY valid JSON."
+            user_prompt = row.get("input_text") or row.get("llm.user_prompt") or ""
+            test_request = f"System Instructions: {candidate_prompt}\n\nUser Request: {user_prompt}\n\nReturn ONLY valid JSON."
             try:
                 response = client.models.generate_content(
                     model="gemini-3.1-pro-preview",
@@ -137,9 +152,9 @@ def run_empirical_backtest(candidate_prompt: str, domain: str) -> str:
                     res = evaluate_hr_compliance(payload)
                 else:
                     res = evaluate_finops_compliance(payload)
-                results.append((row['llm.user_prompt'], res, simulation_output))
+                results.append((user_prompt, res, simulation_output))
             except Exception as ex:
-                results.append((row['llm.user_prompt'], f"Simulation error: {ex}", "No valid JSON output"))
+                results.append((user_prompt, f"Simulation error: {ex}", "No valid JSON output"))
 
     for prompt, res, output in results:
         if res.startswith("PASSED"):

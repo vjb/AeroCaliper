@@ -410,7 +410,7 @@
           <div class="panel-title"><div class="panel-icon icon-teal">▶</div>Live Execution Log</div>
           <span style="font-size:11px;color:var(--accent-teal)" id="sseStatus"></span>
         </div>
-        <div class="log-body" id="logBody">
+        <div class="log-body log-output" id="logBody">
           <div class="log-placeholder">Trigger remediation to see the autonomous pipeline execute in real-time...</div>
         </div>
       </div>
@@ -569,12 +569,17 @@ function resetPhases() { for(let i=0;i<5;i++) setPhase(i,'idle'); }
 
 function formatLogMessage(msg) {
   let escaped = escHtml(msg);
-  // Convert double asterisks to strong tags
-  escaped = escaped.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-  // Convert single asterisks to em tags
-  escaped = escaped.replace(/\*(.*?)\*/g, '<em>$1</em>');
-  // Convert code backticks to code tags
-  escaped = escaped.replace(/`(.*?)`/g, '<code style="background:rgba(255,255,255,0.1);padding:2px 4px;border-radius:4px;font-family:monospace;">$1</code>');
+  // Highlight aggressive MCP tool logs in bold Cyan
+  if (escaped.includes('[🚀 ARIZE MCP SERVER]')) {
+    escaped = `<span style="color:#06b6d4; font-weight:bold;">${escaped}</span>`;
+  } else {
+    // Convert double asterisks to strong tags
+    escaped = escaped.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    // Convert single asterisks to em tags
+    escaped = escaped.replace(/\*(.*?)\*/g, '<em>$1</em>');
+    // Convert code backticks to code tags
+    escaped = escaped.replace(/`(.*?)`/g, '<code style="background:rgba(255,255,255,0.1);padding:2px 4px;border-radius:4px;font-family:monospace;">$1</code>');
+  }
   return escaped;
 }
 

@@ -40,6 +40,27 @@ api_key = os.getenv("GOOGLE_AGENT_PLATFORM_API_KEY")
 print(f"Active Google Cloud Project: {PROJECT_ID}")
 print(f"Vertex Search Location: {LOCATION}")
 print("Gemini SDK Initialized.")
+
+# --- Arize Phoenix OpenTelemetry Tracing ---
+from phoenix.otel import register
+from opentelemetry import trace
+from openinference.instrumentation.google_genai import GoogleGenAIInstrumentor
+
+phoenix_api_key = os.getenv("PHOENIX_API_KEY", "").replace("\\\\n", "").replace("\\n", "").strip()
+space_name = os.getenv("ARIZE_SPACE_NAME", os.getenv("ARIZE_SPACE_ID", ""))
+base_url = f"https://app.phoenix.arize.com/s/{space_name}" if space_name else "https://app.phoenix.arize.com"
+
+print("Registering Arize Phoenix Tracer...")
+tracer_provider = register(
+    project_name="aerocaliper-demo-notebook",
+    endpoint=f"{base_url}/v1/traces",
+    headers={"Authorization": f"Bearer {phoenix_api_key}"},
+    auto_instrument=True
+)
+
+# Grab the tracer object to manually instrument functions
+tracer = trace.get_tracer(__name__)
+print("OTel Tracer registered successfully.")
 """))
 
 # Cell 2: Anomaly Detection Markdown

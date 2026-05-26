@@ -86,6 +86,16 @@ sequenceDiagram
 
 ---
 
+## Advanced Observability & Evaluation Paradigms
+
+AeroCaliper v4.0 implements state-of-the-art evaluation paradigms required to establish enterprise trustworthiness:
+
+1. **RAG Faithfulness (`ReferenceCorrectnessEvaluator`)**: Checks if the candidate system prompt correctly references policy constraints retrieved from Vertex AI Search or Local GCS storage without introducing hallucinated rules.
+2. **Human Alignment Metrics**: Quantitative alignment (F1, Precision, and Recall) comparing the AI Evaluator's verdicts against expert annotations in the golden dataset.
+3. **HITL Trace Annotations**: Logs Human-in-the-Loop approvals and rejections natively back to the specific execution trace span inside the Phoenix Cloud platform.
+
+---
+
 ## Production Infrastructure & Reliability Upgrades
 
 AeroCaliper v4.0 incorporates critical engineering optimizations to support production-level reliability:

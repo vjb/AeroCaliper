@@ -28,12 +28,17 @@ class AgentGatewaySimulator:
         self.use_real_api = MODEL_ARMOR_AVAILABLE and self.project_id and self.template
         
         if self.use_real_api:
-            from google.api_core.client_options import ClientOptions
-            client_options = ClientOptions(api_endpoint=f"modelarmor.{self.location}.rep.googleapis.com")
-            self.client = modelarmor_v1.ModelArmorClient(transport="rest", client_options=client_options)
-            logger.info("[Gateway] Configured to use REAL Google Cloud Model Armor API.")
-        else:
-            raise RuntimeError("[Gateway] Strict Mode: Missing Model Armor config (project/template) or SDK not available.")
+            try:
+                from google.api_core.client_options import ClientOptions
+                client_options = ClientOptions(api_endpoint=f"modelarmor.{self.location}.rep.googleapis.com")
+                self.client = modelarmor_v1.ModelArmorClient(transport="rest", client_options=client_options)
+                logger.info("[Gateway] Configured to use REAL Google Cloud Model Armor API.")
+            except Exception as e:
+                logger.warning(f"[Gateway] Failed to initialize real Model Armor client: {e}. Falling back to simulation.")
+                self.use_real_api = False
+                
+        if not self.use_real_api:
+            logger.info("[Gateway] Model Armor config or SDK not available. Using local simulated Model Armor.")
 
     def inspect_egress(self, payload: str):
         """

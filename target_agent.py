@@ -12,7 +12,7 @@ os.environ.setdefault("PHOENIX_PROJECT_NAME", "aerocaliper")
 
 # --- Arize Phoenix OpenTelemetry Instrumentation ---
 from phoenix.otel import register
-from opentelemetry import trace
+from tools.observability import trace_chain
 
 phoenix_api_key = os.getenv("PHOENIX_API_KEY", "").replace("\\n", "").replace("\n", "").strip()
 
@@ -22,6 +22,8 @@ tracer_provider = register(
     headers={"Authorization": f"Bearer {phoenix_api_key}"},
 )
 print(f"[OTel] Registered → {PHOENIX_SPACE_URL} (project: aerocaliper)")
+
+
 
 # --- Google Gen AI SDK (Agent Platform) ---
 import google.genai
@@ -92,14 +94,16 @@ class TargetAgent:
         except Exception as e:
             print(f"[Target Agent] Warning: Failed to pull prompt from Arize Registry. Using fallback. Error: {e}")
             self.system_prompt = self.FALLBACK_PROMPT_FINOPS if use_case == "finops" else self.FALLBACK_PROMPT_HR
-        api_key = os.getenv("GOOGLE_AGENT_PLATFORM_API_KEY")
+        api_key = os.getenv("GOOGLE_AGENT_PLATFORM_API_KEY") or os.getenv("GEMINI_API_KEY")
         self.client = google.genai.Client(vertexai=True, api_key=api_key)
         self.model = "gemini-3.1-pro-preview"
 
         # Auto-instrument the Google GenAI SDK
         GoogleGenAIInstrumentor(client=self.client).instrument()
 
+    @trace_chain(name="target_agent_generate_deployment_payload")
     def generate_deployment_payload(self, user_prompt: str) -> dict:
+
         """
         Submits the user_prompt to Gemini using self.system_prompt as the system instruction.
         When running with the fallback (vulnerable) prompt, the agent has no budget constraints

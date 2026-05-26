@@ -18,7 +18,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 # ─────────────────────────────────────────────────────────────
 # Constants
 # ─────────────────────────────────────────────────────────────
-CLOUD_RUN_URL = "https://aerocaliper-agent-622472185650.us-central1.run.app"
+CLOUD_RUN_URL = os.getenv("CLOUD_RUN_URL", "https://aerocaliper-agent-mg7mo672qa-uc.a.run.app")
+
 PHOENIX_URL = "https://app.phoenix.arize.com"
 PYTHON_CMD = ["py", "-3.13"]
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))

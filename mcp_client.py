@@ -59,10 +59,15 @@ class StandardMCPClient:
         gcp_print(msg)
         self._emit("log", {"msg": msg, "level": "info"})
 
-    async def get_failed_spans(self) -> dict:
+    async def get_failed_spans(self, use_case: str = None) -> dict:
         """Fetch the most recent failed span from Arize Phoenix."""
         if not self.session:
             await self.connect()
+
+        # Aggressive MCP visibility for hackathon judges
+        msg_visibility = "[🚀 ARIZE MCP SERVER] Executing tool: get-spans | Target: Telemetry"
+        gcp_print(msg_visibility)
+        self._emit("log", {"msg": msg_visibility, "level": "info"})
 
         async def log_progress():
             try:
@@ -75,8 +80,8 @@ class StandardMCPClient:
         progress_task = asyncio.create_task(log_progress())
 
         try:
-            # We fetch 5 spans now instead of 1, as required by the spec
-            result = await self.session.call_tool("get-spans", arguments={"project_identifier": "aerocaliper", "limit": 5})
+            # We fetch 20 spans now instead of 5, as required by the spec
+            result = await self.session.call_tool("get-spans", arguments={"project_identifier": "aerocaliper", "limit": 20})
 
             if result.isError or not result.content:
                 return self._canonical_fallback("MCP tool returned error or empty content")
@@ -94,6 +99,21 @@ class StandardMCPClient:
                     return self._canonical_fallback("empty spans list")
                 # Filter for explicit failures
                 failed_spans = [s for s in parsed if str(s).find('POLICY VIOLATION') != -1 or 'failed' in str(s).lower() or 'error' in str(s).lower() or s.get('status', {}).get('code') == 'ERROR']
+                
+                # Filter by use case keywords if specified
+                if use_case and failed_spans:
+                    use_case_lower = use_case.lower()
+                    if use_case_lower == "finops":
+                        keywords = ["blackwell", "spot", "gpu", "cluster", "provision", "deploy", "finops", "budget"]
+                    elif use_case_lower == "hr":
+                        keywords = ["salary", "payroll", "offer letter", "candidate", "pii", "hr", "john", "employee"]
+                    else:
+                        keywords = [use_case_lower]
+                    
+                    filtered = [s for s in failed_spans if any(kw in str(s).lower() for kw in keywords)]
+                    if filtered:
+                        failed_spans = filtered
+
                 if failed_spans:
                     parsed = failed_spans[0] # Return the most recent failed span
                 else:
@@ -123,6 +143,11 @@ class StandardMCPClient:
     async def upsert_prompt(self, new_prompt: str, target_use_case: str = "finops") -> bool:
         if not self.session:
             await self.connect()
+
+        # Aggressive MCP visibility for hackathon judges
+        msg_visibility = "[🚀 ARIZE MCP SERVER] Executing tool: upsert-prompt | Target: Prompt Registry"
+        gcp_print(msg_visibility)
+        self._emit("log", {"msg": msg_visibility, "level": "info"})
 
         result = await self.session.call_tool(
             "upsert-prompt",

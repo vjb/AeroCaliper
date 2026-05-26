@@ -3,10 +3,12 @@ import json
 import uuid
 import google.genai
 from google.cloud import firestore
+from tools.observability import trace_chain
+
 
 def _get_embedding(text: str) -> list[float]:
     """Helper to get an embedding using Vertex AI via GenAI SDK."""
-    api_key = os.environ.get("GOOGLE_AGENT_PLATFORM_API_KEY")
+    api_key = os.environ.get("GOOGLE_AGENT_PLATFORM_API_KEY") or os.environ.get("GEMINI_API_KEY")
     client = google.genai.Client(vertexai=True, api_key=api_key)
     response = client.models.embed_content(
         model="text-embedding-005",
@@ -14,7 +16,10 @@ def _get_embedding(text: str) -> list[float]:
     )
     return response.embeddings[0].values
 
+@trace_chain(name="query_past_remediations")
 def query_past_remediations(violation_context: str) -> str:
+
+
     """
     Queries Firestore to find past successful remediations similar to the current violation.
     Returns the past patched prompt if a match is found, or an empty string.
@@ -42,7 +47,10 @@ def query_past_remediations(violation_context: str) -> str:
     except Exception as e:
         return f"Failed to query long-term memory: {e}"
 
+@trace_chain(name="store_successful_remediation")
 def store_successful_remediation(trace_id: str, violation_context: str, patched_prompt: str) -> str:
+
+
     """
     Stores a successful prompt patch in Firestore for future retrieval.
     """

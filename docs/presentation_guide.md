@@ -124,6 +124,22 @@ sequenceDiagram
 
 ---
 
+## 6. Advanced Evaluation Paradigms: RAG Faithfulness & Human Alignment
+
+AeroCaliper v4.0 implements advanced evaluation guardrails required for high-trust enterprise environments:
+
+### 1. RAG Faithfulness (`ReferenceCorrectnessEvaluator`)
+- **The Evaluation:** Checks if the generated candidate system prompt accurately references constraints retrieved from Vertex AI RAG Search or Local GCS Storage without hallucinating fake policies or rules.
+- **The Metric:** It evaluates the retrieved policy constraints against the candidate system prompt. If the prompt skips constraints (such as spot instance requirements or restricted Blackwell cluster rules) or introduces non-existent rule overrides, the evaluator returns `0.0` (FAIL). It returns `1.0` (PASS) only when the prompt is fully faithful to the reference text.
+- **The Benefit:** Safe, context-grounded healing that prevents the AI from engineering insecure workaround instructions.
+
+### 2. Human Expert Alignment Metrics
+- **The Evaluation:** The AI's evaluation accuracy is quantitatively validated against human-labeled benchmarks in the `golden_dataset.csv` (using the `human_expert_label` column).
+- **The Metric:** Calculates and outputs standard validation metrics—**Precision, Recall, and F1 Score**—comparing the AI Evaluator's verdicts against human expert annotations. 
+- **The Benefit:** Real-time alignment stats are outputted during report generation, giving auditors and judges mathematical proof that the AI Evaluator aligns perfectly with human expert guidelines.
+
+---
+
 ## 5. Component Mapping
 
 ### Arize Phoenix Integration

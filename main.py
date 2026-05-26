@@ -120,6 +120,29 @@ async def approve_patch(session_id: str):
     agent = session.get("agent")
     if agent:
         agent.approval_granted = True
+        # Log HITL Feedback Span Annotation back to Phoenix Cloud!
+        if getattr(agent, "current_failed_span", None):
+            try:
+                span_id = agent.current_failed_span.get("id")
+                if span_id:
+                    from phoenix.client import Client
+                    from phoenix.client.resources.spans import SpanAnnotationData
+                    px_client = Client()
+                    px_client.spans.log_span_annotations(
+                        span_annotations=[
+                            SpanAnnotationData(
+                                name="Human Feedback",
+                                span_id=span_id,
+                                annotator_kind="HUMAN",
+                                result={
+                                    "label": "APPROVED",
+                                    "explanation": "Admin approved and deployed the candidate prompt patch."
+                                }
+                            )
+                        ]
+                    )
+            except Exception as e:
+                print(f"Failed to log approval feedback to Phoenix: {e}")
     session["approved"] = True
     session["approval_event"].set()  # Unblock the pipeline
     return {"status": "approved", "session_id": session_id}
@@ -134,6 +157,29 @@ async def reject_patch(session_id: str):
     agent = session.get("agent")
     if agent:
         agent.approval_granted = False
+        # Log HITL Feedback Span Annotation back to Phoenix Cloud!
+        if getattr(agent, "current_failed_span", None):
+            try:
+                span_id = agent.current_failed_span.get("id")
+                if span_id:
+                    from phoenix.client import Client
+                    from phoenix.client.resources.spans import SpanAnnotationData
+                    px_client = Client()
+                    px_client.spans.log_span_annotations(
+                        span_annotations=[
+                            SpanAnnotationData(
+                                name="Human Feedback",
+                                span_id=span_id,
+                                annotator_kind="HUMAN",
+                                result={
+                                    "label": "REJECTED",
+                                    "explanation": "Admin rejected the candidate prompt patch."
+                                }
+                            )
+                        ]
+                    )
+            except Exception as e:
+                print(f"Failed to log rejection feedback to Phoenix: {e}")
     session["approved"] = False
     session["approval_event"].set()  # Unblock so pipeline sees rejection
     return {"status": "rejected", "session_id": session_id}
