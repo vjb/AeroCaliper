@@ -16,7 +16,22 @@
 
 ---
 
-## 2. Video Storyboard (2-Minute Pitch)
+## 2. Production Reliability & Engineering Highlights (What's New in v4.0)
+
+AeroCaliper v4.0 introduces major engineering highlights and reliability upgrades for enterprise-grade robustness:
+
+1. **Cloud Run Resource Optimization:** Spin-up of the Phoenix MCP server subprocess via `npx` pushed resource usage past standard bounds. The container instance was optimized with **2 GiB RAM and 2 vCPUs** (Revision `00067-mlh`) to completely eliminate Out-of-Memory (OOM) failures.
+2. **Playwright E2E Test Suite:** Built a comprehensive E2E test framework (`tests/`) verifying:
+   - **Spec 01 (Golden Path):** Transition of FinOps agent from vulnerable (Baseline) to healed (Healed) state.
+   - **Spec 02 (Abort Path):** Switch to HR use-case, trigger remediation, reject candidate prompt, and ensure baseline remains vulnerable.
+   - **Spec 03 (Observability):** Assert spans are sent to Phoenix, check Experiments metrics, and verify prompt registry updates.
+   - **Spec 04 (Stream Protocol):** Validate raw SSE endpoints independently of the DOM.
+3. **Thread-Safe Event Loop Isolation:** Resolved `RuntimeError: asyncio.run() cannot be called from a running event loop` inside the test environment by executing all synchronous tools calling asynchronous coroutines inside **dedicated child threads** with their own event loops.
+4. **XML Tag Prompt Separation & Styling:** Gemini generates the prompt patch by grouping instructions inside `<original_prompt>` and `<compliance_overrides>` tags. The UI parses this structure and renders beautiful, distinct cards separating core persona instructions (blue container) from compliance guardrails (violet container).
+
+---
+
+## 3. Video Storyboard (2-Minute Pitch)
 
 | Time | Visual | Voiceover |
 |---|---|---|
@@ -29,7 +44,7 @@
 
 ---
 
-## 3. Architecture Diagram
+## 4. Architecture Diagram
 
 ```mermaid
 sequenceDiagram
@@ -51,7 +66,7 @@ sequenceDiagram
     AeroCaliper->>VertexRAG: Retrieve Corporate FinOps Policy
     VertexRAG-->>AeroCaliper: "H200s are strictly banned"
     
-    AeroCaliper->>AeroCaliper: Draft Candidate Prompt Patch
+    AeroCaliper->>AeroCaliper: Draft Candidate Prompt Patch (XML isolated)
     
     AeroCaliper->>Phoenix: Run Experiment (Golden Dataset)
     Phoenix-->>AeroCaliper: Code Evaluator scores 100% Pass
@@ -64,7 +79,7 @@ sequenceDiagram
 
 ---
 
-## 4. Judge's Reproduction Guide
+## 5. Judge's Reproduction Guide
 
 We have built a fully automated simulation so you can witness the autonomous loop yourself.
 
@@ -84,16 +99,23 @@ We have built a fully automated simulation so you can witness the autonomous loo
 3. **Install Dependencies:**
    ```bash
    pip install -r requirements.txt
+   playwright install chromium
    ```
 
-4. **Run the Autonomous Demo:**
+4. **Run the Automated E2E Tests:**
+   We have included a full automated Playwright test suite that runs against the production Cloud Run URL to verify all user paths:
+   ```bash
+   pytest -v
+   ```
+
+5. **Run the Autonomous Demo:**
    We have included a Python script that natively simulates the entire flow. It will instantiate the failing FinOps agent, trigger the background MCP introspection, prove the prompt fix in Phoenix Experiments, and hot-swap the prompt.
    ```bash
    python scripts/simulate_demo.py
    ```
    *Watch the stdout to see exactly how Gemini uses the Phoenix MCP server to read its own traces and deploy fixes.*
 
-5. **Verify in Phoenix Cloud:**
+6. **Verify in Phoenix Cloud:**
    Log into your Arize Phoenix Cloud workspace. You will see:
    - The original failed spans in the **Traces** tab.
    - The Golden Dataset backtest in the **Experiments** tab scoring 1.0.
